@@ -1,6 +1,6 @@
 # Hệ thống Quản lý Công việc thông minh 
 Xây dựng hệ thống quản lý task/dự án kiểu Trello/Jira thu nhỏ.
-- Backend: ASP.NET Core (.NET 8)
+- Backend: ASP.NET Core (.NET 10)
 - Frontend: React + TypeScript
 - AI: ML.NET (dự đoán nguy cơ trễ tiến độ)
 
