@@ -10,4 +10,20 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\Identity\Identity.Api\Identity.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Projects\Projects.Api\Projects.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Projects\Projects.Infrastructure\Projects.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\TaskManagement\TaskManagement.Api\TaskManagement.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\TaskManagement\TaskManagement.Infrastructure\TaskManagement.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Sprints\Sprints.Api\Sprints.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Sprints\Sprints.Infrastructure\Sprints.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Notifications\Notifications.Api\Notifications.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Notifications\Notifications.Infrastructure\Notifications.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\RiskAI\RiskAI.Api\RiskAI.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\RiskAI\RiskAI.Infrastructure\RiskAI.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Dashboard\Dashboard.Api\Dashboard.Api.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,9 +1,63 @@
 <Solution>
   <Folder Name="/src/" />
   <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/Application.Abstractions/Application.Abstractions.csproj" />
+    <Project Path="src/BuildingBlocks/EventBus/EventBus.csproj" />
+    <Project Path="src/BuildingBlocks/Infrastructure.Persistence/Infrastructure.Persistence.csproj" />
     <Project Path="src/BuildingBlocks/SharedKernel/SharedKernel.csproj" />
   </Folder>
   <Folder Name="/src/Host/">
     <Project Path="src/Host/ProjectManagementAI.Api/ProjectManagementAI.Api.csproj" />
+    <Project Path="src/Host/ProjectManagementAI.Worker/ProjectManagementAI.Worker.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Dashboard/">
+    <Project Path="src/Modules/Dashboard/Dashboard.Api/Dashboard.Api.csproj" />
+    <Project Path="src/Modules/Dashboard/Dashboard.Application/Dashboard.Application.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identity/">
+    <Project Path="src/Modules/Identity/Identity.Api/Identity.Api.csproj" />
+    <Project Path="src/Modules/Identity/Identity.Application/Identity.Application.csproj" />
+    <Project Path="src/Modules/Identity/Identity.Contracts/Identity.Contracts.csproj" />
+    <Project Path="src/Modules/Identity/Identity.Domain/Identity.Domain.csproj" />
+    <Project Path="src/Modules/Identity/Identity.Infrastructure/Identity.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notifications/">
+    <Project Path="src/Modules/Notifications/Notifications.Api/Notifications.Api.csproj" />
+    <Project Path="src/Modules/Notifications/Notifications.Application/Notifications.Application.csproj" />
+    <Project Path="src/Modules/Notifications/Notifications.Contracts/Notifications.Contracts.csproj" />
+    <Project Path="src/Modules/Notifications/Notifications.Domain/Notifications.Domain.csproj" />
+    <Project Path="src/Modules/Notifications/Notifications.Infrastructure/Notifications.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Projects/">
+    <Project Path="src/Modules/Projects/Projects.Api/Projects.Api.csproj" />
+    <Project Path="src/Modules/Projects/Projects.Application/Projects.Application.csproj" />
+    <Project Path="src/Modules/Projects/Projects.Contracts/Projects.Contracts.csproj" />
+    <Project Path="src/Modules/Projects/Projects.Domain/Projects.Domain.csproj" />
+    <Project Path="src/Modules/Projects/Projects.Infrastructure/Projects.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/RiskAI/">
+    <Project Path="src/Modules/RiskAI/RiskAI.Api/RiskAI.Api.csproj" />
+    <Project Path="src/Modules/RiskAI/RiskAI.Application/RiskAI.Application.csproj" />
+    <Project Path="src/Modules/RiskAI/RiskAI.Contracts/RiskAI.Contracts.csproj" />
+    <Project Path="src/Modules/RiskAI/RiskAI.Domain/RiskAI.Domain.csproj" />
+    <Project Path="src/Modules/RiskAI/RiskAI.Infrastructure/RiskAI.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Sprints/">
+    <Project Path="src/Modules/Sprints/Sprints.Api/Sprints.Api.csproj" />
+    <Project Path="src/Modules/Sprints/Sprints.Application/Sprints.Application.csproj" />
+    <Project Path="src/Modules/Sprints/Sprints.Contracts/Sprints.Contracts.csproj" />
+    <Project Path="src/Modules/Sprints/Sprints.Domain/Sprints.Domain.csproj" />
+    <Project Path="src/Modules/Sprints/Sprints.Infrastructure/Sprints.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/TaskManagement/">
+    <Project Path="src/Modules/TaskManagement/TaskManagement.Api/TaskManagement.Api.csproj" />
+    <Project Path="src/Modules/TaskManagement/TaskManagement.Application/TaskManagement.Application.csproj" />
+    <Project Path="src/Modules/TaskManagement/TaskManagement.Contracts/TaskManagement.Contracts.csproj" />
+    <Project Path="src/Modules/TaskManagement/TaskManagement.Domain/TaskManagement.Domain.csproj" />
+    <Project Path="src/Modules/TaskManagement/TaskManagement.Infrastructure/TaskManagement.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ArchitectureTests/ArchitectureTests.csproj" />
   </Folder>
 </Solution>
