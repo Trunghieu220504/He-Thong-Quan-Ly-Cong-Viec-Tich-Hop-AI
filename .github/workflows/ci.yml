@@ -1,0 +1,39 @@
+
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  backend:
+    name: Build, Test and Validate Docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore ProjectManagementAI.slnx
+
+      - name: Build Release
+        run: dotnet build ProjectManagementAI.slnx -c Release --no-restore
+
+      - name: Run Architecture Tests
+        run: dotnet test tests/ArchitectureTests/ArchitectureTests.csproj -c Release --no-restore
+
+      - name: Validate Docker Compose
+        run: docker compose -f infra/docker/docker-compose.yml config -q
