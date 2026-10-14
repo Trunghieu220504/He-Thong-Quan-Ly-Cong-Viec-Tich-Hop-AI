@@ -1,4 +1,3 @@
-using Application.Abstractions;
 using Application.Abstractions.CQRS;
 using FluentValidation;
 using Identity.Application.Abstractions;
@@ -13,7 +12,7 @@ public sealed class LoginCommandHandler(
     IUserRepository users,
     IPasswordHasher passwordHasher,
     IJwtTokenGenerator tokenGenerator,
-    IUnitOfWork unitOfWork)
+    IIdentityUnitOfWork unitOfWork)
     : ICommandHandler<LoginCommand, Result<AuthTokens>>
 {
     // Dùng chung một thông báo cho "email không tồn tại" và "sai mật khẩu" để không lộ email nào đã đăng ký.

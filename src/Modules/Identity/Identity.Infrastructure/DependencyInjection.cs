@@ -1,4 +1,3 @@
-using Application.Abstractions;
 using Identity.Application.Abstractions;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Security;
@@ -21,7 +20,7 @@ public static class DependencyInjection
             npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", IdentityDbContext.Schema)));
 
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<IdentityDbContext>());
+        services.AddScoped<IIdentityUnitOfWork>(sp => sp.GetRequiredService<IdentityDbContext>());
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();

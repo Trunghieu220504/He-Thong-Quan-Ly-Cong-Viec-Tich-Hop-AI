@@ -1,4 +1,3 @@
-using Application.Abstractions;
 using Application.Abstractions.CQRS;
 using FluentValidation;
 using Identity.Application.Abstractions;
@@ -12,7 +11,7 @@ public sealed class RegisterCommandHandler(
     IValidator<RegisterCommand> validator,
     IUserRepository users,
     IPasswordHasher passwordHasher,
-    IUnitOfWork unitOfWork)
+    IIdentityUnitOfWork unitOfWork)
     : ICommandHandler<RegisterCommand, Result<Guid>>
 {
     public async Task<Result<Guid>> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -38,7 +37,15 @@ public sealed class RegisterCommandHandler(
         }
 
         users.Add(user);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DuplicateEmailException)
+        {
+            // Hai request đăng ký cùng email chạy đồng thời: request sau vi phạm unique index.
+            return Result<Guid>.Conflict("Email đã được sử dụng.");
+        }
 
         return Result<Guid>.Success(user.Id);
     }
