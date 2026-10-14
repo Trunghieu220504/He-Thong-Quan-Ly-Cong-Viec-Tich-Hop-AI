@@ -23,7 +23,7 @@ public static class AuthEndpoints
         {
             var result = await sender.Send(new RegisterCommand(req.Email, req.Password, req.DisplayName), ct);
             return result.IsSuccess
-                ? Results.Created($"/api/users/{result.Value}", new { id = result.Value })
+                ? Results.Created(string.Empty, new { id = result.Value })
                 : ToProblem(result);
         });
 

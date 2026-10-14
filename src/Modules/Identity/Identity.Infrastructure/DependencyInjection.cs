@@ -1,4 +1,5 @@
 using Identity.Application.Abstractions;
+using Identity.Contracts;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,7 @@ public static class DependencyInjection
             npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", IdentityDbContext.Schema)));
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IIdentityModuleApi, IdentityModuleApi>();
         services.AddScoped<IIdentityUnitOfWork>(sp => sp.GetRequiredService<IdentityDbContext>());
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
