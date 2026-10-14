@@ -1,10 +1,11 @@
+using Application.Abstractions;
 using Identity.Domain;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Infrastructure.Persistence;
 
-public sealed class IdentityDbContext : BaseDbContext
+public sealed class IdentityDbContext : BaseDbContext, IUnitOfWork
 {
     public const string Schema = "identity";
 
