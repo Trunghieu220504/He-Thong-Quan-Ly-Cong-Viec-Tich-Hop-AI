@@ -91,10 +91,17 @@ curl http://localhost:8000/health/ready   # AI service
 ### Chạy backend local (không Docker)
 
 ```bash
+# Một lần duy nhất trên mỗi máy: khóa ký JWT (>= 32 ký tự, KHÔNG commit)
+dotnet user-secrets init --project src/Host/ProjectManagementAI.Api
+dotnet user-secrets set "Jwt:SecretKey" "<chuoi-ngau-nhien-it-nhat-32-ky-tu>" --project src/Host/ProjectManagementAI.Api
+
+docker compose -f infra/docker/docker-compose.yml up -d postgres
 dotnet restore
 dotnet build
 dotnet run --project src/Host/ProjectManagementAI.Api
 ```
+
+Thiếu `Jwt:SecretKey` thì host báo lỗi ngay khi khởi động. Trên CI/Docker dùng biến môi trường `Jwt__SecretKey`.
 
 ### Chạy test
 
