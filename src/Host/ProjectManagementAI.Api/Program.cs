@@ -5,6 +5,7 @@ using Identity.Infrastructure;
 using Identity.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Projects.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +16,8 @@ builder.Services.AddIdentityApplication();
 
 // ---- Infrastructure: DbContext (schema "identity"), BCrypt, JWT generator ----
 builder.Services.AddIdentityInfrastructure(builder.Configuration);
-// TODO(Task 6/7 - Hải): builder.Services.AddProjectsInfrastructure(builder.Configuration);
+
+builder.Services.AddProjectsInfrastructure(builder.Configuration);
 
 // ---- Authentication: JWT Bearer (khớp JwtTokenGenerator) ----
 var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
