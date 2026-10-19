@@ -89,6 +89,58 @@ docker compose -f infra/docker/docker-compose.yml config -q
 
 Nếu lệnh thành công, mã thoát sẽ bằng `0`.
 
-## 10. Người phụ trách
+## 10. Áp dụng migration EF Core
+
+Sau khi PostgreSQL có trạng thái `healthy`, tạo schema và bảng cho các module từ
+thư mục gốc của dự án. Các biến môi trường dưới đây chỉ có hiệu lực trong cửa sổ
+PowerShell hiện tại và không được commit vào repository.
+
+```powershell
+$env:ASPNETCORE_ENVIRONMENT="Development"
+$env:Jwt__SecretKey="chuoi-bat-ky-dai-hon-32-ky-tu-0123456789"
+Remove-Item Env:ConnectionStrings__Default -ErrorAction SilentlyContinue
+
+dotnet ef database update `
+  --project src/Modules/Identity/Identity.Infrastructure `
+  --startup-project src/Host/ProjectManagementAI.Api
+
+dotnet ef database update `
+  --project src/Modules/Projects/Projects.Infrastructure `
+  --startup-project src/Host/ProjectManagementAI.Api
+```
+
+Chạy lại mỗi lệnh `database update` lần thứ hai. Kết quả mong đợi là:
+`No migrations were applied. The database is already up to date.`
+
+Kiểm tra schema và bảng đã được tạo:
+
+```powershell
+docker exec pmai-postgres psql -U pmai -d pmai -c "\dn"
+docker exec pmai-postgres psql -U pmai -d pmai -c "\dt identity.*"
+docker exec pmai-postgres psql -U pmai -d pmai -c "\dt projects.*"
+```
+
+Kết quả mong đợi:
+
+- `\dn` có các schema `identity`, `projects` và `public`.
+- `\dt identity.*` có `__EFMigrationsHistory` và `users`.
+- `\dt projects.*` có `__EFMigrationsHistory`, `project_members` và `projects`.
+
+Kiểm tra model không còn thay đổi chưa tạo migration:
+
+```powershell
+dotnet ef migrations has-pending-model-changes `
+  --project src/Modules/Identity/Identity.Infrastructure `
+  --startup-project src/Host/ProjectManagementAI.Api
+
+dotnet ef migrations has-pending-model-changes `
+  --project src/Modules/Projects/Projects.Infrastructure `
+  --startup-project src/Host/ProjectManagementAI.Api
+```
+
+Cả hai lệnh phải in:
+`No changes have been made to the model since the last migration.`
+
+## 11. Người phụ trách
 
 Testing, CI/CD & Deploy – Đào Xuân Hòa.
