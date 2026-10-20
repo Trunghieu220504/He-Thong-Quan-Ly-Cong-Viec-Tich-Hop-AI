@@ -5,14 +5,19 @@ using Identity.Infrastructure;
 using Identity.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Projects.Api.Endpoints;
+using Projects.Application;
 using Projects.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ---- Application layer: MediatR + FluentValidation của từng module ----
-builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(Identity.Application.DependencyInjection).Assembly));
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
+    typeof(Identity.Application.DependencyInjection).Assembly,
+    typeof(Projects.Application.DependencyInjection).Assembly));
+
 builder.Services.AddIdentityApplication();
+builder.Services.AddProjectsApplication();
 
 // ---- Infrastructure: DbContext (schema "identity"), BCrypt, JWT generator ----
 builder.Services.AddIdentityInfrastructure(builder.Configuration);
@@ -62,7 +67,7 @@ app.UseAuthorization();
 
 app.MapHealthChecks("/health").AllowAnonymous();
 app.MapAuthEndpoints();
-// TODO(Task 7 - Hải): app.MapProjectsEndpoints();  -> GET /api/projects (RequireAuthorization)
+app.MapProjectsEndpoints();
 
 app.Run();
 
