@@ -32,6 +32,23 @@ jobs:
       - name: Build Release
         run: dotnet build ProjectManagementAI.slnx -c Release --no-restore
 
+      - name: Install EF Core CLI
+        run: dotnet tool install --global dotnet-ef --version 9.0.8
+
+      - name: Check Identity pending model changes
+        run: >-
+          dotnet ef migrations has-pending-model-changes
+          --project src/Modules/Identity/Identity.Infrastructure
+          --startup-project src/Host/ProjectManagementAI.Api
+          --context IdentityDbContext
+
+      - name: Check Projects pending model changes
+        run: >-
+          dotnet ef migrations has-pending-model-changes
+          --project src/Modules/Projects/Projects.Infrastructure
+          --startup-project src/Host/ProjectManagementAI.Api
+          --context ProjectsDbContext
+
       - name: Run Architecture Tests
         run: dotnet test tests/ArchitectureTests/ArchitectureTests.csproj -c Release --no-restore
 
