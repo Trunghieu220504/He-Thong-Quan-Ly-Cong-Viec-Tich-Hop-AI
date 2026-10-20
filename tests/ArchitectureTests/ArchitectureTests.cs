@@ -48,6 +48,30 @@ public class ModuleBoundaryTests
     }
 
     [Fact]
+    public void Identity_Domain_KhongDuoc_Reference_Projects_Domain()
+    {
+        var result = Types.InAssembly(typeof(Identity.Domain.Placeholder).Assembly)
+            .Should()
+            .NotHaveDependencyOn("Projects.Domain")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful,
+            $"Identity.Domain không được reference Projects.Domain. Vi phạm: {string.Join(", ", result.FailingTypeNames ?? [])}");
+    }
+
+    [Fact]
+    public void Projects_Domain_KhongDuoc_Reference_Identity_Domain()
+    {
+        var result = Types.InAssembly(typeof(Projects.Domain.Placeholder).Assembly)
+            .Should()
+            .NotHaveDependencyOn("Identity.Domain")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful,
+            $"Projects.Domain không được reference Identity.Domain. Vi phạm: {string.Join(", ", result.FailingTypeNames ?? [])}");
+    }
+
+    [Fact]
     public void Contracts_ChiDuocPhuThuoc_SharedKernel()
     {
         var result = Types.InAssembly(typeof(TaskManagement.Contracts.Placeholder).Assembly)
