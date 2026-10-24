@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Identity.Api.Endpoints;
 using Identity.Application;
 using Identity.Infrastructure;
@@ -51,6 +52,18 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
+// ---- JSON: enum nhận/trả dạng chuỗi ("Todo", không phải 0) để khớp contract với web ----
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)));
+
+// ---- CORS: chỉ bật khi có Cors:AllowedOrigins (appsettings.Development.json khai báo origin của web dev) ----
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+if (corsOrigins.Length > 0)
+{
+    builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+        policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod()));
+}
+
 builder.Services.AddHealthChecks();
 builder.Services.AddOpenApi();
 
@@ -62,6 +75,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+if (corsOrigins.Length > 0) app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
