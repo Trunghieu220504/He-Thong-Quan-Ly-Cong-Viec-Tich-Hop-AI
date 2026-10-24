@@ -1,9 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\SharedKernel\SharedKernel.csproj" />
+    <ProjectReference Include="..\..\Projects\Projects.Contracts\Projects.Contracts.csproj" />
     <ProjectReference Include="..\Sprints.Domain\Sprints.Domain.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Application.Abstractions\Application.Abstractions.csproj" />
-    <ProjectReference Include="..\..\..\BuildingBlocks\EventBus\EventBus.csproj" />
+    <ProjectReference Include="..\..\TaskManagement\TaskManagement.Contracts\TaskManagement.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.2" />
   </ItemGroup>
 
   <PropertyGroup>

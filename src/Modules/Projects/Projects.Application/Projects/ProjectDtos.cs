@@ -9,7 +9,11 @@ public sealed record ProjectSummaryDto(
     int MemberCount,
     DateTime CreatedAt);
 
-public sealed record ProjectMemberDto(Guid UserId, string Role, DateTime JoinedAt);
+public sealed record ProjectMemberDto(
+    Guid UserId,
+    string? DisplayName,
+    string Role,
+    DateTime JoinedAt);
 
 public sealed record ProjectDetailDto(
     Guid Id,
