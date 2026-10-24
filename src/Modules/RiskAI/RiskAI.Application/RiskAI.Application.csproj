@@ -1,9 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\RiskAI.Contracts\RiskAI.Contracts.csproj" />
     <ProjectReference Include="..\RiskAI.Domain\RiskAI.Domain.csproj" />
+    <ProjectReference Include="..\..\Projects\Projects.Contracts\Projects.Contracts.csproj" />
+    <ProjectReference Include="..\..\TaskManagement\TaskManagement.Contracts\TaskManagement.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Application.Abstractions\Application.Abstractions.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\EventBus\EventBus.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
   </ItemGroup>
 
   <PropertyGroup>
