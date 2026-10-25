@@ -23,7 +23,7 @@ public sealed class ProjectsDbContext : BaseDbContext, IProjectsUnitOfWork
             return await base.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateException ex) when (
-            ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: "IX_projects_members_project_id_user_id" })
+            ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: "IX_project_members_ProjectId_UserId" })
         {
             throw new DuplicateMemberException(ex);
         }
