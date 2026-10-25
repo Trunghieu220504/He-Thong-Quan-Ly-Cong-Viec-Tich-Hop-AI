@@ -26,6 +26,9 @@ public sealed class Sprint : AggregateRoot<Guid>
         DateTime? startDate,
         DateTime? endDate)
     {
+        startDate = ToUtc(startDate);
+        endDate = ToUtc(endDate);
+
         if (projectId == Guid.Empty)
             return Result<Sprint>.ValidationFailure("ProjectId không hợp lệ.");
 
@@ -51,6 +54,20 @@ public sealed class Sprint : AggregateRoot<Guid>
         });
     }
 
+    // Npgsql chỉ ghi DateTime Kind=Utc vào timestamptz: Local đổi sang UTC, Unspecified coi là UTC.
+    private static DateTime? ToUtc(DateTime? value)
+    {
+        if (value is not { } date)
+            return null;
+
+        return date.Kind switch
+        {
+            DateTimeKind.Utc => date,
+            DateTimeKind.Local => date.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(date, DateTimeKind.Utc)
+        };
+    }
+
     public Result Start()
     {
         if (Status != SprintStatus.Planned)
@@ -73,6 +90,9 @@ public sealed class Sprint : AggregateRoot<Guid>
 
     public Result AddTask(Guid taskId)
     {
+        if (Status == SprintStatus.Completed)
+            return Result.Conflict("Không thể thêm task vào sprint đã hoàn tất.");
+
         if (taskId == Guid.Empty)
             return Result.ValidationFailure("TaskId không hợp lệ.");
 
