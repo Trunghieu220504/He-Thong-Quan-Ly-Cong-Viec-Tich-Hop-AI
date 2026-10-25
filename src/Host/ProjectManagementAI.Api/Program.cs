@@ -9,21 +9,29 @@ using Microsoft.IdentityModel.Tokens;
 using Projects.Api.Endpoints;
 using Projects.Application;
 using Projects.Infrastructure;
+using TaskManagement.Api.Endpoints;
+using TaskManagement.Application;
+using TaskManagement.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ---- Application layer: MediatR + FluentValidation của từng module ----
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
     typeof(Identity.Application.DependencyInjection).Assembly,
-    typeof(Projects.Application.DependencyInjection).Assembly));
+    typeof(Projects.Application.DependencyInjection).Assembly,
+    typeof(TaskManagement.Application.DependencyInjection).Assembly));
 
 builder.Services.AddIdentityApplication();
 builder.Services.AddProjectsApplication();
+builder.Services.AddTaskManagementApplication();
 
 // ---- Infrastructure: DbContext (schema "identity"), BCrypt, JWT generator ----
 builder.Services.AddIdentityInfrastructure(builder.Configuration);
 
 builder.Services.AddProjectsInfrastructure(builder.Configuration);
+
+// ITaskModuleApi thật phải đăng ký trước các module dùng TryAdd dự phòng (Sprints, RiskAI).
+builder.Services.AddTaskManagementInfrastructure(builder.Configuration);
 
 // ---- Authentication: JWT Bearer (khớp JwtTokenGenerator) ----
 var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
@@ -82,6 +90,7 @@ app.UseAuthorization();
 app.MapHealthChecks("/health").AllowAnonymous();
 app.MapAuthEndpoints();
 app.MapProjectsEndpoints();
+app.MapTaskManagementEndpoints();
 
 app.Run();
 
