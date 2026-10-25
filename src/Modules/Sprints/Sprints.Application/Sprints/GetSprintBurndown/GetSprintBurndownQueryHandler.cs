@@ -1,4 +1,4 @@
-﻿using Application.Abstractions.CQRS;
+using Application.Abstractions.CQRS;
 using Projects.Contracts;
 using SharedKernel;
 using Sprints.Application.Abstractions;
@@ -18,11 +18,11 @@ public sealed class GetSprintBurndownQueryHandler(
     {
         var sprint = await sprints.GetByIdAsync(request.SprintId, cancellationToken);
         if (sprint is null)
-            return Result<SprintBurndownDto>.NotFound("KhĂ´ng tĂ¬m tháº¥y sprint.");
+            return Result<SprintBurndownDto>.NotFound("Không tìm thấy sprint.");
 
         var role = await projects.GetMemberRoleAsync(sprint.ProjectId, request.ActorId, cancellationToken);
         if (role is null)
-            return Result<SprintBurndownDto>.Forbidden("Báº¡n khĂ´ng pháº£i thĂ nh viĂªn cá»§a dá»± Ă¡n nĂ y.");
+            return Result<SprintBurndownDto>.Forbidden("Bạn không phải thành viên của dự án này.");
 
         var taskIds = sprint.Tasks.Select(task => task.TaskId).ToArray();
         var completedTasks = (await tasks.CountByStatusAsync(taskIds, cancellationToken)).Done;
