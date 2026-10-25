@@ -30,7 +30,7 @@ builder.Services.AddIdentityInfrastructure(builder.Configuration);
 
 builder.Services.AddProjectsInfrastructure(builder.Configuration);
 
-// ITaskModuleApi thật phải đăng ký trước các module dùng TryAdd dự phòng (Sprints, RiskAI).
+// Đăng ký ITaskModuleApi thật trước để các TryAdd dự phòng của Sprints/RiskAI bị bỏ qua (không để hai bản cùng tồn tại).
 builder.Services.AddTaskManagementInfrastructure(builder.Configuration);
 
 // ---- Authentication: JWT Bearer (khớp JwtTokenGenerator) ----

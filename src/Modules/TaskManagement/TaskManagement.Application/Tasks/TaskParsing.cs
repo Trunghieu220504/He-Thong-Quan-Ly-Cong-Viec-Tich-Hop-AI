@@ -9,10 +9,14 @@ internal static class TaskParsing
 
     public static bool TryParsePriority(string? value, out TaskPriority priority) => TryParse(value, out priority);
 
+    // So khớp với tên enum thay vì Enum.TryParse, vì TryParse nhận cả "Low,High" (gộp cờ) và số.
     private static bool TryParse<TEnum>(string? value, out TEnum result) where TEnum : struct, Enum
     {
         result = default;
-        if (string.IsNullOrWhiteSpace(value) || char.IsDigit(value.Trim()[0])) return false;
-        return Enum.TryParse(value.Trim(), ignoreCase: true, out result) && Enum.IsDefined(result);
+        var name = value?.Trim();
+        if (string.IsNullOrEmpty(name)) return false;
+
+        var match = Enum.GetNames<TEnum>().FirstOrDefault(n => string.Equals(n, name, StringComparison.OrdinalIgnoreCase));
+        return match is not null && Enum.TryParse(match, out result);
     }
 }
