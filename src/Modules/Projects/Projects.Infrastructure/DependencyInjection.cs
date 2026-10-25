@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Projects.Application.Abstractions;
 using Projects.Infrastructure.Persistence;
+using Projects.Contracts;
 
 namespace Projects.Infrastructure;
 
@@ -16,7 +17,7 @@ public static class DependencyInjection
         services.AddDbContext<ProjectsDbContext>(o => o.UseNpgsql(
             connectionString,
             npgsql => npgsql.MigrationsHistoryTable("_EFMigrationsHistory", ProjectsDbContext.Schema)));
-
+        services.AddScoped<IProjectsModuleApi, ProjectsModuleApi>();
         services.AddScoped<IProjectRepository, ProjectRepository>();
         services.AddScoped<IProjectsUnitOfWork>(sp => sp.GetRequiredService<ProjectsDbContext>());
 
