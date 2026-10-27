@@ -11,17 +11,8 @@ export async function getTasks(projectId: string, status?: TaskStatus): Promise<
     return list
   }
 
-  try {
-    const query = status ? `?status=${status}` : ''
-    return await apiClient<TaskItem[]>(`/api/projects/${projectId}/tasks${query}`)
-  } catch (error) {
-    console.warn(`Lấy tasks từ backend thất bại (${projectId}), dùng mock fallback:`, error)
-    let list = mockService.getTasks(projectId)
-    if (status) {
-      list = list.filter((t) => t.status === status)
-    }
-    return list
-  }
+  const query = status ? `?status=${status}` : ''
+  return apiClient<TaskItem[]>(`/api/projects/${projectId}/tasks${query}`)
 }
 
 export async function createTask(projectId: string, data: CreateTaskRequest): Promise<TaskItem> {
@@ -29,15 +20,10 @@ export async function createTask(projectId: string, data: CreateTaskRequest): Pr
     return mockService.createTask(projectId, data)
   }
 
-  try {
-    return await apiClient<TaskItem>(`/api/projects/${projectId}/tasks`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    })
-  } catch (error) {
-    console.warn('Tạo task trên backend lỗi, lưu tạm vào mock:', error)
-    return mockService.createTask(projectId, data)
-  }
+  return apiClient<TaskItem>(`/api/projects/${projectId}/tasks`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
 }
 
 export async function updateTaskStatus(taskId: string, status: TaskStatus): Promise<void> {
@@ -46,15 +32,10 @@ export async function updateTaskStatus(taskId: string, status: TaskStatus): Prom
     return
   }
 
-  try {
-    await apiClient<void>(`/api/tasks/${taskId}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status }),
-    })
-  } catch (error) {
-    console.warn(`Cập nhật status task ${taskId} lỗi, cập nhật trên mock:`, error)
-    mockService.updateTaskStatus(taskId, status)
-  }
+  await apiClient<void>(`/api/tasks/${taskId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  })
 }
 
 export async function updateTaskAssignee(taskId: string, assigneeId?: string): Promise<void> {
@@ -63,13 +44,8 @@ export async function updateTaskAssignee(taskId: string, assigneeId?: string): P
     return
   }
 
-  try {
-    await apiClient<void>(`/api/tasks/${taskId}/assignee`, {
-      method: 'PATCH',
-      body: JSON.stringify({ assigneeId }),
-    })
-  } catch (error) {
-    console.warn(`Cập nhật người nhận task ${taskId} lỗi, cập nhật trên mock:`, error)
-    mockService.updateTaskAssignee(taskId, assigneeId)
-  }
+  await apiClient<void>(`/api/tasks/${taskId}/assignee`, {
+    method: 'PATCH',
+    body: JSON.stringify({ assigneeId }),
+  })
 }

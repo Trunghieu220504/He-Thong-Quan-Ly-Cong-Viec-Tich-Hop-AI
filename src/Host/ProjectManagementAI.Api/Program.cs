@@ -9,21 +9,35 @@ using Microsoft.IdentityModel.Tokens;
 using Projects.Api.Endpoints;
 using Projects.Application;
 using Projects.Infrastructure;
+using RiskAI.Api.Endpoints;
+using RiskAI.Application;
+using RiskAI.Infrastructure;
+using Sprints.Api.Endpoints;
+using Sprints.Application;
+using Sprints.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ---- Application layer: MediatR + FluentValidation của từng module ----
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
     typeof(Identity.Application.DependencyInjection).Assembly,
-    typeof(Projects.Application.DependencyInjection).Assembly));
+    typeof(Projects.Application.DependencyInjection).Assembly,
+    typeof(Sprints.Application.DependencyInjection).Assembly,
+    typeof(RiskAI.Application.DependencyInjection).Assembly));
 
 builder.Services.AddIdentityApplication();
 builder.Services.AddProjectsApplication();
+builder.Services.AddSprintsApplication();
+builder.Services.AddRiskAIApplication();
 
 // ---- Infrastructure: DbContext (schema "identity"), BCrypt, JWT generator ----
 builder.Services.AddIdentityInfrastructure(builder.Configuration);
 
 builder.Services.AddProjectsInfrastructure(builder.Configuration);
+builder.Services.AddSprintsInfrastructure(builder.Configuration);
+
+// ---- RiskAI: HttpClient gọi ai-service (AiService:BaseUrl, mặc định http://localhost:8000) ----
+builder.Services.AddRiskAIInfrastructure(builder.Configuration);
 
 // ---- Authentication: JWT Bearer (khớp JwtTokenGenerator) ----
 var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
@@ -82,6 +96,8 @@ app.UseAuthorization();
 app.MapHealthChecks("/health").AllowAnonymous();
 app.MapAuthEndpoints();
 app.MapProjectsEndpoints();
+app.MapSprintsEndpoints();
+app.MapRiskAIEndpoints();
 
 app.Run();
 

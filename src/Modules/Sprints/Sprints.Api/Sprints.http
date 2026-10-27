@@ -1,0 +1,46 @@
+@baseUrl = http://localhost:5046
+@token = replace-with-access-token
+@projectId = 00000000-0000-0000-0000-000000000001
+@sprintId = 00000000-0000-0000-0000-000000000002
+@taskId = 00000000-0000-0000-0000-000000000003
+
+### Create a sprint
+POST {{baseUrl}}/api/projects/{{projectId}}/sprints
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Sprint 1",
+  "goal": "Deliver the first project increment",
+  "startDate": "2026-11-01T00:00:00Z",
+  "endDate": "2026-11-14T00:00:00Z"
+}
+
+### List sprints in a project
+GET {{baseUrl}}/api/projects/{{projectId}}/sprints
+Authorization: Bearer {{token}}
+
+### Start a sprint
+POST {{baseUrl}}/api/sprints/{{sprintId}}/start
+Authorization: Bearer {{token}}
+
+### Complete a sprint
+POST {{baseUrl}}/api/sprints/{{sprintId}}/complete
+Authorization: Bearer {{token}}
+
+### Add a task to a sprint
+POST {{baseUrl}}/api/sprints/{{sprintId}}/tasks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "taskId": "{{taskId}}"
+}
+
+### Get sprint burndown
+GET {{baseUrl}}/api/sprints/{{sprintId}}/burndown
+Authorization: Bearer {{token}}
+
+### Missing sprint returns 404
+GET {{baseUrl}}/api/sprints/00000000-0000-0000-0000-000000000099/burndown
+Authorization: Bearer {{token}}
