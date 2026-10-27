@@ -12,6 +12,9 @@ using Projects.Infrastructure;
 using TaskManagement.Api.Endpoints;
 using TaskManagement.Application;
 using TaskManagement.Infrastructure;
+using RiskAI.Api.Endpoints;
+using RiskAI.Application;
+using RiskAI.Infrastructure;
 using Sprints.Api.Endpoints;
 using Sprints.Application;
 using Sprints.Infrastructure;
@@ -24,11 +27,13 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
     typeof(Projects.Application.DependencyInjection).Assembly,
     typeof(Sprints.Application.DependencyInjection).Assembly,
     typeof(TaskManagement.Application.DependencyInjection).Assembly));
+    typeof(RiskAI.Application.DependencyInjection).Assembly));
 
 builder.Services.AddIdentityApplication();
 builder.Services.AddProjectsApplication();
 builder.Services.AddSprintsApplication();
 builder.Services.AddTaskManagementApplication();
+builder.Services.AddRiskAIApplication();
 
 // ---- Infrastructure: DbContext (schema "identity"), BCrypt, JWT generator ----
 builder.Services.AddIdentityInfrastructure(builder.Configuration);
@@ -40,6 +45,10 @@ builder.Services.AddSprintsInfrastructure(builder.Configuration);
 builder.Services.AddTaskManagementInfrastructure(builder.Configuration);
 
 // ---- Authentication: JWT Bearer (khÃ¡Â»â€ºp JwtTokenGenerator) ----
+// ---- RiskAI: HttpClient gọi ai-service (AiService:BaseUrl, mặc định http://localhost:8000) ----
+builder.Services.AddRiskAIInfrastructure(builder.Configuration);
+
+// ---- Authentication: JWT Bearer (khớp JwtTokenGenerator) ----
 var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
 if (jwt.SecretKey.Length < 32)
     throw new InvalidOperationException(
@@ -98,6 +107,7 @@ app.MapAuthEndpoints();
 app.MapProjectsEndpoints();
 app.MapSprintsEndpoints();
 app.MapTaskManagementEndpoints();
+app.MapRiskAIEndpoints();
 
 app.Run();
 

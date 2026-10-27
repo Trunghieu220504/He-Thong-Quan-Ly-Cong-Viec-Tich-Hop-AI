@@ -269,8 +269,8 @@ export const mockService = {
     }
   },
 
-  getTaskRisk(taskId: string): TaskRiskResponse {
+  getTaskRisk(taskId: string): TaskRiskResponse | null {
     const db = loadDB()
-    return db.risks[taskId] || { taskId, risk: 'low', source: 'ai-service' }
+    return db.risks[taskId] || null
   },
 }
