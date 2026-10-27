@@ -49,6 +49,20 @@ jobs:
           --startup-project src/Host/ProjectManagementAI.Api
           --context ProjectsDbContext
 
+      - name: Check Sprints pending model changes
+        run: >-
+          dotnet ef migrations has-pending-model-changes
+          --project src/Modules/Sprints/Sprints.Infrastructure
+          --startup-project src/Host/ProjectManagementAI.Api
+          --context SprintsDbContext
+
+      - name: Check TaskManagement pending model changes
+        run: >-
+          dotnet ef migrations has-pending-model-changes
+          --project src/Modules/TaskManagement/TaskManagement.Infrastructure
+          --startup-project src/Host/ProjectManagementAI.Api
+          --context TaskManagementDbContext
+
       - name: Run Architecture Tests
         run: dotnet test tests/ArchitectureTests/ArchitectureTests.csproj -c Release --no-restore
 
