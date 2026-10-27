@@ -1,0 +1,13 @@
+@baseUrl = http://localhost:5046
+@token = replace-with-access-token
+@taskId = 00000000-0000-0000-0000-000000000003
+
+# Cần ai-service chạy trước: cd ai-service && uvicorn app.main:app --port 8000
+
+### Dự đoán rủi ro trễ hạn của task → 200 { taskId, risk: "low", source: "ai-service" }
+### (ai-service tắt hoặc timeout → 503; task không tồn tại → 404; không phải thành viên dự án → 403)
+GET {{baseUrl}}/api/tasks/{{taskId}}/risk
+Authorization: Bearer {{token}}
+
+### Không có token → 401
+GET {{baseUrl}}/api/tasks/{{taskId}}/risk

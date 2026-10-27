@@ -59,5 +59,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ArchitectureTests/ArchitectureTests.csproj" />
+    <Project Path="tests/RiskAI.Tests/RiskAI.Tests.csproj" />
   </Folder>
 </Solution>
