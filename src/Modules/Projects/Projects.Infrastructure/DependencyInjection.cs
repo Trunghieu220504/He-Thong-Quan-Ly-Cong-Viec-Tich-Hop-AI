@@ -16,7 +16,8 @@ public static class DependencyInjection
 
         services.AddDbContext<ProjectsDbContext>(o => o.UseNpgsql(
             connectionString,
-            npgsql => npgsql.MigrationsHistoryTable("_EFMigrationsHistory", ProjectsDbContext.Schema)));
+            npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", ProjectsDbContext.Schema)));
+
         services.AddScoped<IProjectsModuleApi, ProjectsModuleApi>();
         services.AddScoped<IProjectRepository, ProjectRepository>();
         services.AddScoped<IProjectsUnitOfWork>(sp => sp.GetRequiredService<ProjectsDbContext>());
