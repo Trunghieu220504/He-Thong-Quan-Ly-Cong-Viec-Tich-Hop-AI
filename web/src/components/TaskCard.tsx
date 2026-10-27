@@ -45,7 +45,7 @@ export function TaskCard({ task, isViewer = false }: Props) {
 
     if (!riskData || !riskData.risk) {
       return (
-        <span className="risk-badge risk-unknown" title="Dịch vụ AI chưa khả dụng (503)">
+        <span className="risk-badge risk-unknown" title="Chưa có dữ liệu dự đoán rủi ro từ AI">
           Chưa có dự đoán
         </span>
       )

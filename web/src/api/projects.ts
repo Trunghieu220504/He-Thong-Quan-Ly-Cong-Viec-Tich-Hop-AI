@@ -7,13 +7,7 @@ export async function getProjects(page = 1, pageSize = 20): Promise<ProjectsList
     return mockService.getProjects()
   }
 
-  try {
-    return await apiClient<ProjectsListResponse>(`/api/projects?page=${page}&pageSize=${pageSize}`)
-  } catch (error) {
-    // Nếu chưa chạy backend, tự động fallback sang mock để không nghẽn luồng xem giao diện
-    console.warn('Backend chưa sẵn sàng, dùng tạm mock data:', error)
-    return mockService.getProjects()
-  }
+  return apiClient<ProjectsListResponse>(`/api/projects?page=${page}&pageSize=${pageSize}`)
 }
 
 export async function getProject(id: string): Promise<ProjectDetail> {
@@ -21,12 +15,7 @@ export async function getProject(id: string): Promise<ProjectDetail> {
     return mockService.getProject(id)
   }
 
-  try {
-    return await apiClient<ProjectDetail>(`/api/projects/${id}`)
-  } catch (error) {
-    console.warn(`Không lấy được dự án ${id} từ backend, dùng tạm mock data:`, error)
-    return mockService.getProject(id)
-  }
+  return apiClient<ProjectDetail>(`/api/projects/${id}`)
 }
 
 export async function createProject(data: CreateProjectRequest): Promise<{ id: string }> {
@@ -34,15 +23,10 @@ export async function createProject(data: CreateProjectRequest): Promise<{ id: s
     return mockService.createProject(data.name, data.description)
   }
 
-  try {
-    return await apiClient<{ id: string }>('/api/projects', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    })
-  } catch (error) {
-    console.warn('Backend tạo dự án lỗi, tạo trên mock data:', error)
-    return mockService.createProject(data.name, data.description)
-  }
+  return apiClient<{ id: string }>('/api/projects', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
 }
 
 export async function addProjectMember(
@@ -54,14 +38,9 @@ export async function addProjectMember(
     return
   }
 
-  try {
-    await apiClient<void>(`/api/projects/${projectId}/members`, {
-      method: 'POST',
-      body: JSON.stringify({ userId: data.userId, role: data.role }),
-    })
-  } catch (error) {
-    console.warn('Backend thêm thành viên lỗi, lưu vào mock:', error)
-    mockService.addProjectMember(projectId, data)
-  }
+  await apiClient<void>(`/api/projects/${projectId}/members`, {
+    method: 'POST',
+    body: JSON.stringify({ userId: data.userId, role: data.role }),
+  })
 }
 
