@@ -1,14 +1,16 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using RiskAI.Contracts;
-using TaskManagement.Contracts;
 
 namespace RiskAI.Infrastructure;
 
 public static class DependencyInjection
 {
+    /// <summary>
+    /// Đăng ký client gọi ai-service. RiskAI không tự đăng ký ITaskModuleApi/IProjectsModuleApi:
+    /// hai interface này do module TaskManagement và Projects cung cấp, thiếu thì Host báo lỗi DI ngay khi khởi động.
+    /// </summary>
     public static IServiceCollection AddRiskAIInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<AiServiceOptions>()
@@ -23,9 +25,6 @@ public static class DependencyInjection
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
             client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
         });
-
-        // Dự phòng tới khi TaskManagement có implementation thật (xem UnavailableTaskModuleApi)
-        services.TryAddScoped<ITaskModuleApi, UnavailableTaskModuleApi>();
 
         return services;
     }
