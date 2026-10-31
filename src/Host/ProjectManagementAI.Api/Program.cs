@@ -15,6 +15,9 @@ using RiskAI.Infrastructure;
 using Sprints.Api.Endpoints;
 using Sprints.Application;
 using Sprints.Infrastructure;
+using TaskManagement.Api.Endpoints;
+using TaskManagement.Application;
+using TaskManagement.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,17 +26,21 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
     typeof(Identity.Application.DependencyInjection).Assembly,
     typeof(Projects.Application.DependencyInjection).Assembly,
     typeof(Sprints.Application.DependencyInjection).Assembly,
-    typeof(RiskAI.Application.DependencyInjection).Assembly));
+    typeof(RiskAI.Application.DependencyInjection).Assembly,
+    typeof(TaskManagement.Application.DependencyInjection).Assembly));
 
 builder.Services.AddIdentityApplication();
 builder.Services.AddProjectsApplication();
 builder.Services.AddSprintsApplication();
+builder.Services.AddTaskManagementApplication();
 builder.Services.AddRiskAIApplication();
 
 // ---- Infrastructure: DbContext (schema "identity"), BCrypt, JWT generator ----
 builder.Services.AddIdentityInfrastructure(builder.Configuration);
 
 builder.Services.AddProjectsInfrastructure(builder.Configuration);
+// Đăng ký ITaskModuleApi thật trước để các TryAdd dự phòng của Sprints/RiskAI bị bỏ qua (không để hai bản cùng tồn tại).
+builder.Services.AddTaskManagementInfrastructure(builder.Configuration);
 builder.Services.AddSprintsInfrastructure(builder.Configuration);
 
 // ---- RiskAI: HttpClient gọi ai-service (AiService:BaseUrl, mặc định http://localhost:8000) ----
@@ -97,6 +104,7 @@ app.MapHealthChecks("/health").AllowAnonymous();
 app.MapAuthEndpoints();
 app.MapProjectsEndpoints();
 app.MapSprintsEndpoints();
+app.MapTaskManagementEndpoints();
 app.MapRiskAIEndpoints();
 
 app.Run();
