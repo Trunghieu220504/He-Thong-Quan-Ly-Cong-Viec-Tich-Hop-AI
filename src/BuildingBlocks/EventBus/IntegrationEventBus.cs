@@ -1,6 +1,6 @@
-namespace EventBus;
+using SharedKernel;
 
-public interface IIntegrationEvent;
+namespace EventBus;
 
 public interface IIntegrationEventBus
 {

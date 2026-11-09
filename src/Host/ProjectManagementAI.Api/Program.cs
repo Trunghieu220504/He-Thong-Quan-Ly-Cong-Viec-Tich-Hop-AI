@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using EventBus;
 using Identity.Api.Endpoints;
 using Identity.Application;
 using Identity.Infrastructure;
@@ -34,6 +35,9 @@ builder.Services.AddProjectsApplication();
 builder.Services.AddSprintsApplication();
 builder.Services.AddTaskManagementApplication();
 builder.Services.AddRiskAIApplication();
+
+// ---- Bus sự kiện tích hợp chạy trong tiến trình (handler lỗi chỉ ghi log, không làm hỏng bên phát) ----
+builder.Services.AddInProcessEventBus();
 
 // ---- Infrastructure: DbContext (schema "identity"), BCrypt, JWT generator ----
 builder.Services.AddIdentityInfrastructure(builder.Configuration);
