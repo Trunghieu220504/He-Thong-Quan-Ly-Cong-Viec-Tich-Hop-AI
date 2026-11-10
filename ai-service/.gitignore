@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .env
+# Mô hình và dữ liệu mô phỏng sinh lại được bằng scripts/, không commit
+models/
+data/
