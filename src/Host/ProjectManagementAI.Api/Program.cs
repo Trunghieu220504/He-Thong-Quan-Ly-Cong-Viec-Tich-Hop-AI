@@ -6,7 +6,10 @@ using Identity.Application;
 using Identity.Infrastructure;
 using Identity.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
+using ProjectManagementAI.Api;
+using ProjectManagementAI.Api.Health;
 using Projects.Api.Endpoints;
 using Projects.Application;
 using Projects.Infrastructure;
@@ -89,10 +92,15 @@ if (corsOrigins.Length > 0)
         policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod()));
 }
 
-builder.Services.AddHealthChecks();
+// ---- Health: /health = tiến trình còn sống; /health/ready = đã nối được DB (tag "ready") ----
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseReadinessHealthCheck>(DatabaseReadinessHealthCheck.Name, tags: [DatabaseReadinessHealthCheck.ReadyTag]);
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// Tự migrate nếu Database:MigrateOnStartup=true (mặc định tắt). Chạy trước khi nhận request.
+await app.MigrateDatabasesAsync();
 
 if (app.Environment.IsDevelopment())
 {
@@ -104,7 +112,13 @@ if (corsOrigins.Length > 0) app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHealthChecks("/health").AllowAnonymous();
+// Liveness: không chạy check nào nên vẫn 200 khi DB chết (để container không bị khởi động lại oan).
+app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
+// Readiness: 200 khi nối được DB, 503 khi không.
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains(DatabaseReadinessHealthCheck.ReadyTag)
+}).AllowAnonymous();
 app.MapAuthEndpoints();
 app.MapProjectsEndpoints();
 app.MapSprintsEndpoints();
