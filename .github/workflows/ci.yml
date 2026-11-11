@@ -63,10 +63,13 @@ jobs:
           --startup-project src/Host/ProjectManagementAI.Api
           --context TaskManagementDbContext
 
-      - name: Run Architecture Tests
-        run: dotnet test tests/ArchitectureTests/ArchitectureTests.csproj -c Release --no-restore
+      - name: Run all .NET tests
+        run: dotnet test ProjectManagementAI.slnx -c Release --no-restore
 
       - name: Validate Docker Compose
+        env:
+          POSTGRES_PASSWORD: ci-compose-placeholder
+          JWT_SECRET_KEY: ci-compose-placeholder-at-least-32-characters
         run: docker compose -f infra/docker/docker-compose.yml config -q
 
   ai-service:
@@ -115,3 +118,12 @@ jobs:
 
       - name: Build web
         run: npm run build --prefix web
+
+  docker-build:
+    name: Build Docker images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f src/Host/ProjectManagementAI.Api/Dockerfile .
+      - run: docker build web
+      - run: docker build ai-service

@@ -5,6 +5,7 @@
 
 # dotenv files
 .env
+ai-service/models/
 
 # User-specific files
 *.rsuser
