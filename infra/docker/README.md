@@ -1,5 +1,7 @@
 # Docker – Project Management AI
 
+For the Week 5 API/Web stack, see [WEEK5.md](WEEK5.md). The PostgreSQL-only instructions below describe the earlier setup.
+
 ## 1. Giới thiệu
 
 Thư mục `infra/docker` chứa cấu hình Docker Compose phục vụ môi trường phát triển của hệ thống quản lý công việc tích hợp AI.

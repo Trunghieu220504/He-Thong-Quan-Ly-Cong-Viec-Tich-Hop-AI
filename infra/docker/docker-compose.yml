@@ -34,7 +34,7 @@ services:
       Database__MigrateOnStartup: "true"
       Smtp__Host: mailhog
     healthcheck:
-      test: ["CMD", "bash", "-c", "echo > /dev/tcp/127.0.0.1/5000"]
+      test: ["CMD", "bash", "/app/api-healthcheck.sh"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,6 +56,11 @@ services:
         condition: service_healthy
   mailhog:
     image: mailhog/mailhog:v1.0.1
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8025/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports: ["1025:1025", "8025:8025"]
 volumes:
   pgdata:
