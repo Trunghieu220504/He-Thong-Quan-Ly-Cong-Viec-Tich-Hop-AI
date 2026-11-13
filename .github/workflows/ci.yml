@@ -70,6 +70,21 @@ jobs:
           --startup-project src/Host/ProjectManagementAI.Api
           --context TaskManagementDbContext
 
+      - name: Check Notifications pending model changes when implemented
+        shell: pwsh
+        run: |
+          $module = 'src/Modules/Notifications/Notifications.Infrastructure'
+          $contexts = @(Get-ChildItem $module -Recurse -Filter '*DbContext.cs' |
+            Where-Object { $_.FullName -notmatch '[\\/](bin|obj)[\\/]' })
+          if ($contexts.Count -eq 0) {
+            Write-Output '::notice::Notifications persistence is not implemented; PMS-168 full acceptance remains blocked.'
+            exit 0
+          }
+          foreach ($context in $contexts) {
+            dotnet ef migrations has-pending-model-changes --project $module --startup-project src/Host/ProjectManagementAI.Api --context $context.BaseName
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
       - name: Run all .NET tests
         run: dotnet test ProjectManagementAI.slnx -c Release --no-restore
 
@@ -148,12 +163,23 @@ jobs:
           test "$(docker compose exec -T api id -u)" != 0
       - name: Smoke with AI available
         shell: pwsh
-        run: ./tests/smoke/smoke-test.ps1 -Mode $env:SMOKE_MODE -AiState Available
+        run: |
+          New-Item -ItemType Directory -Force artifacts | Out-Null
+          Start-Transcript -Path artifacts/smoke-ai-available.log
+          try {
+            ./tests/smoke/smoke-test.ps1 -Mode $env:SMOKE_MODE -AiState Available
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          } finally { Stop-Transcript }
       - name: Stop AI for outage check
         run: docker compose stop ai-service
       - name: Smoke with AI unavailable
         shell: pwsh
-        run: ./tests/smoke/smoke-test.ps1 -Mode $env:SMOKE_MODE -AiState Unavailable
+        run: |
+          Start-Transcript -Path artifacts/smoke-ai-unavailable.log
+          try {
+            ./tests/smoke/smoke-test.ps1 -Mode $env:SMOKE_MODE -AiState Unavailable
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          } finally { Stop-Transcript }
       - name: Collect container logs
         if: always()
         run: |
