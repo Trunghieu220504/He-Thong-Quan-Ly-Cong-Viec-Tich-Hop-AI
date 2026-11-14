@@ -21,6 +21,19 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BuildingBlocks\SharedKernel\SharedKernel.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Identity.Contracts\Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Projects\Projects.Application\Projects.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Projects\Projects.Contracts\Projects.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Sprints\Sprints.Domain\Sprints.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Sprints\Sprints.Application\Sprints.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Sprints\Sprints.Contracts\Sprints.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Notifications\Notifications.Domain\Notifications.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Notifications\Notifications.Application\Notifications.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Notifications\Notifications.Contracts\Notifications.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\RiskAI\RiskAI.Domain\RiskAI.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\RiskAI\RiskAI.Application\RiskAI.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\RiskAI\RiskAI.Contracts\RiskAI.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Dashboard\Dashboard.Application\Dashboard.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\Identity\Identity.Domain\Identity.Domain.csproj" />
     <ProjectReference Include="..\..\src\Modules\Identity\Identity.Application\Identity.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\TaskManagement\TaskManagement.Domain\TaskManagement.Domain.csproj" />
