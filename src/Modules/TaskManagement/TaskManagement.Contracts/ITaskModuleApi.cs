@@ -6,6 +6,12 @@ namespace TaskManagement.Contracts;
 /// </summary>
 public interface ITaskModuleApi
 {
+    /// <summary>
+    /// Read project statistics at the supplied UTC instant. Empty or unknown projects return zero counts.
+    /// The calling module must check project existence and membership before exposing these statistics.
+    /// </summary>
+    Task<ProjectTaskStats> GetProjectStatsAsync(Guid projectId, DateTime utcNow, CancellationToken cancellationToken = default);
+
     /// <summary>Lấy thông tin tóm tắt của task; null nếu không tồn tại.</summary>
     Task<TaskSummary?> GetTaskAsync(Guid taskId, CancellationToken cancellationToken = default);
 
