@@ -7,6 +7,30 @@ namespace TaskManagement.Infrastructure;
 
 internal sealed class TaskModuleApi(TaskManagementDbContext db) : ITaskModuleApi
 {
+    public async Task<ProjectTaskStats> GetProjectStatsAsync(
+        Guid projectId, DateTime utcNow, CancellationToken cancellationToken = default)
+    {
+        var grouped = await db.Tasks.AsNoTracking()
+            .Where(t => t.ProjectId == projectId)
+            .GroupBy(t => t.AssigneeId)
+            .Select(g => new
+            {
+                AssigneeId = g.Key,
+                Total = g.Count(),
+                Todo = g.Count(t => t.Status == DomainStatus.Todo),
+                InProgress = g.Count(t => t.Status == DomainStatus.InProgress),
+                Done = g.Count(t => t.Status == DomainStatus.Done),
+                Overdue = g.Count(t => t.DueDate < utcNow && t.Status != DomainStatus.Done)
+            })
+            .OrderBy(g => g.AssigneeId)
+            .ToListAsync(cancellationToken);
+
+        return new ProjectTaskStats(
+            grouped.Sum(g => g.Total), grouped.Sum(g => g.Todo),
+            grouped.Sum(g => g.InProgress), grouped.Sum(g => g.Done), grouped.Sum(g => g.Overdue),
+            grouped.Select(g => new AssigneeTaskCount(g.AssigneeId, g.Total, g.Done)).ToArray());
+    }
+
     public async Task<TaskSummary?> GetTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
         var task = await db.Tasks.AsNoTracking().FirstOrDefaultAsync(t => t.Id == taskId, cancellationToken);
@@ -33,21 +57,6 @@ internal sealed class TaskModuleApi(TaskManagementDbContext db) : ITaskModuleApi
         var inProgress = Count(DomainStatus.InProgress);
         var done = Count(DomainStatus.Done);
         return new TaskStatusCounts(todo + inProgress + done, todo, inProgress, done);
-    }
-
-    public async Task<ProjectTaskStats> GetProjectStatsAsync(Guid projectId, DateTime utcNow, CancellationToken cancellationToken = default)
-    {
-        var groups = await db.Tasks.AsNoTracking().Where(t => t.ProjectId == projectId)
-            .GroupBy(t => new { t.Status, t.AssigneeId })
-            .Select(g => new { g.Key.Status, g.Key.AssigneeId, Total = g.Count(),
-                Overdue = g.Count(t => t.DueDate < utcNow && t.Status != DomainStatus.Done) })
-            .ToListAsync(cancellationToken);
-        int Count(DomainStatus status) => groups.Where(g => g.Status == status).Sum(g => g.Total);
-        return new(groups.Sum(g => g.Total), Count(DomainStatus.Todo), Count(DomainStatus.InProgress),
-            Count(DomainStatus.Done), groups.Sum(g => g.Overdue),
-            groups.GroupBy(g => g.AssigneeId).OrderBy(g => g.Key)
-                .Select(g => new AssigneeTaskCount(g.Key, g.Sum(x => x.Total),
-                    g.Where(x => x.Status == DomainStatus.Done).Sum(x => x.Total))).ToArray());
     }
 
     public async Task<IReadOnlyList<TaskSummary>> GetProjectTasksAsync(Guid projectId, CancellationToken cancellationToken = default)

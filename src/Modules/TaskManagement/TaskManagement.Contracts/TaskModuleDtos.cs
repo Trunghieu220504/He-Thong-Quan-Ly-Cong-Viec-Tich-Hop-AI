@@ -20,3 +20,11 @@ public sealed record TaskSummary(
 
 /// <summary>Kết quả đếm theo trạng thái; Total là số task tìm thấy (= Todo + InProgress + Done).</summary>
 public sealed record TaskStatusCounts(int Total, int Todo, int InProgress, int Done);
+
+/// <summary>Overdue means DueDate is strictly before the supplied UTC instant and status is not Done.</summary>
+public sealed record ProjectTaskStats(
+    int Total, int Todo, int InProgress, int Done, int Overdue,
+    IReadOnlyList<AssigneeTaskCount> ByAssignee);
+
+/// <summary>A null AssigneeId represents unassigned tasks.</summary>
+public sealed record AssigneeTaskCount(Guid? AssigneeId, int Total, int Done);

@@ -58,9 +58,11 @@
     <Project Path="src/Modules/TaskManagement/TaskManagement.Infrastructure/TaskManagement.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/TaskManagement.Application.Tests/TaskManagement.Application.Tests.csproj" />
     <Project Path="tests/ArchitectureTests/ArchitectureTests.csproj" />
     <Project Path="tests/EventBus.Tests/EventBus.Tests.csproj" />
     <Project Path="tests/RiskAI.Tests/RiskAI.Tests.csproj" />
     <Project Path="tests/Dashboard.Tests/Dashboard.Tests.csproj" />
+    <Project Path="tests/TaskManagement.Tests/TaskManagement.Tests.csproj" />
   </Folder>
 </Solution>
