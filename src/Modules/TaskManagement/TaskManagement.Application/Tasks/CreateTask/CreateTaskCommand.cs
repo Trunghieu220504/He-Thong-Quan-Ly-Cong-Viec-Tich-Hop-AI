@@ -10,5 +10,5 @@ public sealed record CreateTaskCommand(
     string? Description,
     string Priority,
     Guid? AssigneeId,
-    DateTime? DueDate)
+    DateTime? DueDate, double? EstimatedHours = null, int ProgressPercent = 0)
     : ICommand<Result<TaskDto>>;

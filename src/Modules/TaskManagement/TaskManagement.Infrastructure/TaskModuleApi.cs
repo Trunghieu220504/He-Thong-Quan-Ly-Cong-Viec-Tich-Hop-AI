@@ -12,7 +12,7 @@ internal sealed class TaskModuleApi(TaskManagementDbContext db) : ITaskModuleApi
         var task = await db.Tasks.AsNoTracking().FirstOrDefaultAsync(t => t.Id == taskId, cancellationToken);
         return task is null
             ? null
-            : new TaskSummary(task.Id, task.ProjectId, ToContract(task.Status), task.DueDate, task.AssigneeId);
+            : new TaskSummary(task.Id, task.ProjectId, ToContract(task.Status), task.DueDate, task.AssigneeId, task.EstimatedHours, task.ProgressPercent);
     }
 
     public async Task<TaskStatusCounts> CountByStatusAsync(
@@ -33,6 +33,28 @@ internal sealed class TaskModuleApi(TaskManagementDbContext db) : ITaskModuleApi
         var inProgress = Count(DomainStatus.InProgress);
         var done = Count(DomainStatus.Done);
         return new TaskStatusCounts(todo + inProgress + done, todo, inProgress, done);
+    }
+
+    public async Task<ProjectTaskStats> GetProjectStatsAsync(Guid projectId, DateTime utcNow, CancellationToken cancellationToken = default)
+    {
+        var groups = await db.Tasks.AsNoTracking().Where(t => t.ProjectId == projectId)
+            .GroupBy(t => new { t.Status, t.AssigneeId })
+            .Select(g => new { g.Key.Status, g.Key.AssigneeId, Total = g.Count(),
+                Overdue = g.Count(t => t.DueDate < utcNow && t.Status != DomainStatus.Done) })
+            .ToListAsync(cancellationToken);
+        int Count(DomainStatus status) => groups.Where(g => g.Status == status).Sum(g => g.Total);
+        return new(groups.Sum(g => g.Total), Count(DomainStatus.Todo), Count(DomainStatus.InProgress),
+            Count(DomainStatus.Done), groups.Sum(g => g.Overdue),
+            groups.GroupBy(g => g.AssigneeId).OrderBy(g => g.Key)
+                .Select(g => new AssigneeTaskCount(g.Key, g.Sum(x => x.Total),
+                    g.Where(x => x.Status == DomainStatus.Done).Sum(x => x.Total))).ToArray());
+    }
+
+    public async Task<IReadOnlyList<TaskSummary>> GetProjectTasksAsync(Guid projectId, CancellationToken cancellationToken = default)
+    {
+        var tasks = await db.Tasks.AsNoTracking().Where(t => t.ProjectId == projectId).OrderBy(t => t.Id).ToListAsync(cancellationToken);
+        return tasks.Select(t => new TaskSummary(t.Id, t.ProjectId, ToContract(t.Status), t.DueDate,
+            t.AssigneeId, t.EstimatedHours, t.ProgressPercent)).ToArray();
     }
 
     private static ProjectTaskStatus ToContract(DomainStatus status) => status switch

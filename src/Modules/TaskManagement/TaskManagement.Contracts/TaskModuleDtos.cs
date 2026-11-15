@@ -16,7 +16,7 @@ public sealed record TaskSummary(
     Guid ProjectId,
     ProjectTaskStatus Status,
     DateTime? DueDate,
-    Guid? AssigneeId);
+    Guid? AssigneeId, double? EstimatedHours = null, int ProgressPercent = 0);
 
 /// <summary>Kết quả đếm theo trạng thái; Total là số task tìm thấy (= Todo + InProgress + Done).</summary>
 public sealed record TaskStatusCounts(int Total, int Todo, int InProgress, int Done);
