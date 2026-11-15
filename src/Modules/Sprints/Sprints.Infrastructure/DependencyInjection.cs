@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Sprints.Application.Abstractions;
 using Sprints.Infrastructure.Persistence;
 using TaskManagement.Contracts;
+using Sprints.Contracts;
 
 namespace Sprints.Infrastructure;
 
@@ -23,6 +24,7 @@ public static class DependencyInjection
         services.TryAddScoped<ITaskModuleApi, UnavailableTaskModuleApi>();
         services.AddScoped<ISprintRepository, SprintRepository>();
         services.AddScoped<ISprintsUnitOfWork>(provider => provider.GetRequiredService<SprintsDbContext>());
+        services.AddScoped<ISprintsModuleApi, SprintsModuleApi>();
 
         return services;
     }
