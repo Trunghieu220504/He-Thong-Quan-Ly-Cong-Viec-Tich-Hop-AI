@@ -22,6 +22,9 @@ using Sprints.Infrastructure;
 using TaskManagement.Api.Endpoints;
 using TaskManagement.Application;
 using TaskManagement.Infrastructure;
+using Notifications.Api;
+using Notifications.Application;
+using Notifications.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,13 +34,16 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
     typeof(Projects.Application.DependencyInjection).Assembly,
     typeof(Sprints.Application.DependencyInjection).Assembly,
     typeof(RiskAI.Application.DependencyInjection).Assembly,
-    typeof(TaskManagement.Application.DependencyInjection).Assembly));
+    typeof(TaskManagement.Application.DependencyInjection).Assembly,
+    typeof(Notifications.Application.DependencyInjection).Assembly));
 
 builder.Services.AddIdentityApplication();
 builder.Services.AddProjectsApplication();
 builder.Services.AddSprintsApplication();
 builder.Services.AddTaskManagementApplication();
 builder.Services.AddRiskAIApplication();
+builder.Services.AddNotificationsApplication();
+builder.Services.AddNotificationsRealtime();
 
 // ---- Bus sự kiện tích hợp chạy trong tiến trình (handler lỗi chỉ ghi log, không làm hỏng bên phát) ----
 builder.Services.AddInProcessEventBus();
@@ -52,6 +58,8 @@ builder.Services.AddSprintsInfrastructure(builder.Configuration);
 
 // ---- RiskAI: HttpClient gọi ai-service (AiService:BaseUrl, mặc định http://localhost:8000) ----
 builder.Services.AddRiskAIInfrastructure(builder.Configuration);
+
+builder.Services.AddNotificationsInfrastructure(builder.Configuration);
 
 // ---- Authentication: JWT Bearer (khớp JwtTokenGenerator) ----
 var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
@@ -124,6 +132,7 @@ app.MapProjectsEndpoints();
 app.MapSprintsEndpoints();
 app.MapTaskManagementEndpoints();
 app.MapRiskAIEndpoints();
+app.MapNotificationsEndpoints();
 
 app.Run();
 
