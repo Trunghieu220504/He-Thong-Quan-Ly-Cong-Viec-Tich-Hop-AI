@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using TaskManagement.Application.Tasks.UpdateTask;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -15,7 +16,9 @@ namespace TaskManagement.Api.Endpoints;
 public static class TaskManagementEndpoints
 {
     public sealed record CreateTaskRequest(
-        string Title, string? Description, string Priority, Guid? AssigneeId, DateTime? DueDate);
+        string Title, string? Description, string Priority, Guid? AssigneeId, DateTime? DueDate, double? EstimatedHours = null, int ProgressPercent = 0);
+
+    public sealed record UpdateTaskRequest(string Title, string? Description, string Priority, DateTime? DueDate, double? EstimatedHours, int ProgressPercent);
 
     public sealed record ChangeTaskStatusRequest(string Status);
 
@@ -30,7 +33,7 @@ public static class TaskManagementEndpoints
         {
             if (!TryGetUserId(user, out var userId)) return Results.Unauthorized();
             var result = await sender.Send(new CreateTaskCommand(
-                projectId, userId, req.Title, req.Description, req.Priority, req.AssigneeId, req.DueDate), ct);
+                projectId, userId, req.Title, req.Description, req.Priority, req.AssigneeId, req.DueDate, req.EstimatedHours, req.ProgressPercent), ct);
             return result.IsSuccess
                 ? Results.Created($"/api/tasks/{result.Value!.Id}", result.Value)
                 : ToProblem(result);
@@ -69,6 +72,13 @@ public static class TaskManagementEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : ToProblem(result);
         });
 
+        group.MapPut("/tasks/{taskId:guid}", async (Guid taskId, UpdateTaskRequest req, ClaimsPrincipal user, ISender sender, CancellationToken ct) =>
+        {
+            if (!TryGetUserId(user, out var userId)) return Results.Unauthorized();
+            var result = await sender.Send(new UpdateTaskCommand(taskId, userId, req.Title, req.Description,
+                req.Priority, req.DueDate, req.EstimatedHours, req.ProgressPercent), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : ToProblem(result);
+        });
         return app;
     }
 

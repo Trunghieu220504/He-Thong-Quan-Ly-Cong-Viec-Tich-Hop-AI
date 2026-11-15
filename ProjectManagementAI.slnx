@@ -62,6 +62,7 @@
     <Project Path="tests/ArchitectureTests/ArchitectureTests.csproj" />
     <Project Path="tests/EventBus.Tests/EventBus.Tests.csproj" />
     <Project Path="tests/RiskAI.Tests/RiskAI.Tests.csproj" />
+    <Project Path="tests/Dashboard.Tests/Dashboard.Tests.csproj" />
     <Project Path="tests/TaskManagement.Tests/TaskManagement.Tests.csproj" />
   </Folder>
 </Solution>
