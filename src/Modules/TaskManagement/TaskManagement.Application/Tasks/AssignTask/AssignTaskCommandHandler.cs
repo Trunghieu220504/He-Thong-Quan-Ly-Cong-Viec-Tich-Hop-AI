@@ -1,9 +1,11 @@
 using Application.Abstractions.CQRS;
+using EventBus;
 using FluentValidation;
 using Identity.Contracts;
 using Projects.Contracts;
 using SharedKernel;
 using TaskManagement.Application.Abstractions;
+using TaskManagement.Contracts.Events;
 
 namespace TaskManagement.Application.Tasks.AssignTask;
 
@@ -12,7 +14,8 @@ public sealed class AssignTaskCommandHandler(
     IProjectsModuleApi projects,
     IIdentityModuleApi identity,
     ITaskRepository tasks,
-    ITaskManagementUnitOfWork unitOfWork)
+    ITaskManagementUnitOfWork unitOfWork,
+    IIntegrationEventBus eventBus)
     : ICommandHandler<AssignTaskCommand, Result<TaskDto>>
 {
     public async Task<Result<TaskDto>> Handle(AssignTaskCommand request, CancellationToken cancellationToken)
@@ -36,11 +39,19 @@ public sealed class AssignTaskCommandHandler(
                 return ProjectAccess.ToFailure<TaskDto>(assignee);
         }
 
+        var previousAssigneeId = task.AssigneeId;
         var assigned = task.Assign(request.AssigneeId);
         if (assigned.IsFailure)
             return Result<TaskDto>.ValidationFailure(assigned.Error!);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        if (previousAssigneeId != task.AssigneeId)
+        {
+            await eventBus.PublishAsync(new TaskAssignedIntegrationEvent(
+                Guid.NewGuid(), DateTime.UtcNow, task.Id, task.ProjectId, task.Title,
+                task.AssigneeId, previousAssigneeId, request.ActorId), cancellationToken);
+        }
 
         var assigneeName = await TaskDtoMapper.GetDisplayNameAsync(identity, task.AssigneeId, cancellationToken);
         return Result<TaskDto>.Success(TaskDtoMapper.ToDto(task, assigneeName));

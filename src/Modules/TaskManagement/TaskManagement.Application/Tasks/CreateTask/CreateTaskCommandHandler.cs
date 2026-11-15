@@ -1,9 +1,11 @@
 using Application.Abstractions.CQRS;
+using EventBus;
 using FluentValidation;
 using Identity.Contracts;
 using Projects.Contracts;
 using SharedKernel;
 using TaskManagement.Application.Abstractions;
+using TaskManagement.Contracts.Events;
 using TaskManagement.Domain.Entities;
 
 namespace TaskManagement.Application.Tasks.CreateTask;
@@ -13,7 +15,8 @@ public sealed class CreateTaskCommandHandler(
     IProjectsModuleApi projects,
     IIdentityModuleApi identity,
     ITaskRepository tasks,
-    ITaskManagementUnitOfWork unitOfWork)
+    ITaskManagementUnitOfWork unitOfWork,
+    IIntegrationEventBus eventBus)
     : ICommandHandler<CreateTaskCommand, Result<TaskDto>>
 {
     public async Task<Result<TaskDto>> Handle(CreateTaskCommand request, CancellationToken cancellationToken)
@@ -43,6 +46,13 @@ public sealed class CreateTaskCommandHandler(
         var task = created.Value!;
         tasks.Add(task);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        if (task.AssigneeId is not null)
+        {
+            await eventBus.PublishAsync(new TaskAssignedIntegrationEvent(
+                Guid.NewGuid(), DateTime.UtcNow, task.Id, task.ProjectId, task.Title,
+                task.AssigneeId, null, request.ActorId), cancellationToken);
+        }
 
         var assigneeName = await TaskDtoMapper.GetDisplayNameAsync(identity, task.AssigneeId, cancellationToken);
         return Result<TaskDto>.Success(TaskDtoMapper.ToDto(task, assigneeName));
