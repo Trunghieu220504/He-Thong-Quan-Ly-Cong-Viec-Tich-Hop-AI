@@ -39,6 +39,10 @@ internal sealed class StubHttpHandler(Func<HttpRequestMessage, CancellationToken
 
 internal sealed class FakeTaskModuleApi : ITaskModuleApi
 {
+    public Task<ProjectTaskStats> GetProjectStatsAsync(
+        Guid projectId, DateTime utcNow, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("RiskAI tests do not use project statistics.");
+
     public Dictionary<Guid, TaskSummary> Tasks { get; } = new();
 
     public Task<TaskSummary?> GetTaskAsync(Guid taskId, CancellationToken cancellationToken = default) =>
