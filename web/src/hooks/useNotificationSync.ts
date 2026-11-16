@@ -11,7 +11,7 @@ const HUB_URL = import.meta.env.VITE_NOTIFICATION_HUB_URL || `${API_BASE_URL.rep
 
 export function useNotificationSync() {
   const queryClient = useQueryClient()
-  const { isAuthenticated, tokens } = useAuthStore()
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const seenNotificationIdsRef = useRef<Set<string>>(new Set())
   const isInitialLoadRef = useRef(true)
 
@@ -49,7 +49,7 @@ export function useNotificationSync() {
 
   // Thiết lập SignalR với accessTokenFactory lấy token mới mỗi lần kết nối
   useEffect(() => {
-    if (IS_MOCK || !isAuthenticated || !tokens?.accessToken) return
+    if (IS_MOCK || !isAuthenticated || !useAuthStore.getState().tokens?.accessToken) return
 
     let isDisposed = false
 
@@ -98,7 +98,7 @@ export function useNotificationSync() {
       isDisposed = true
       cleanupPromise.then((cleanup) => cleanup && cleanup())
     }
-  }, [isAuthenticated, tokens?.accessToken, queryClient])
+  }, [isAuthenticated, queryClient])
 
   return {
     notifications: data?.items || [],
@@ -119,4 +119,3 @@ function triggerToastForNotification(item: NotificationItem) {
     toast.info(item.title, item.message)
   }
 }
-

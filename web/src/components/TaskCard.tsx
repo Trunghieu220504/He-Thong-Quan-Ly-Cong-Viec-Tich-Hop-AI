@@ -35,17 +35,7 @@ function getTaskTag(task: TaskItem): string {
 
 // Hàm sinh mã định danh PMS-xxx của nhóm
 function getTaskKey(taskId: string): string {
-  const digits = taskId.replace(/\D/g, '')
-  if (digits.length >= 3) {
-    return `PMS-${digits.slice(-3)}`
-  }
-  let hash = 0
-  for (let i = 0; i < taskId.length; i++) {
-    hash = (hash << 5) - hash + taskId.charCodeAt(i)
-    hash |= 0
-  }
-  const num = 140 + Math.abs(hash % 30)
-  return `PMS-${num}`
+  return taskId
 }
 
 function getStoryPoints(task: TaskItem): number {

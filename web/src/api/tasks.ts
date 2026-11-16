@@ -83,7 +83,7 @@ export async function updateTaskAssignee(taskId: string, assigneeId?: string): P
 
   await apiClient<void>(`/api/tasks/${taskId}/assignee`, {
     method: 'PATCH',
-    body: JSON.stringify({ assigneeId }),
+    body: JSON.stringify({ assigneeId: assigneeId ?? null }),
   })
 }
 
@@ -96,13 +96,31 @@ export async function updateTask(taskId: string, data: Partial<TaskItem>): Promi
     return
   }
 
+  // PUT replaces all details; preserve fields that the modal does not edit.
+  const current = await getTaskById(taskId)
+  const progressPercent = data.progressPercent ?? current.progressPercent
+  if (progressPercent === undefined || progressPercent === null) {
+    throw new Error('Không thể lưu: thiếu dữ liệu tiến độ hiện tại.')
+  }
+  await apiClient<void>(`/api/tasks/${taskId}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      title: data.title ?? current.title,
+      description: 'description' in data ? data.description ?? null : current.description ?? null,
+      priority: data.priority ?? current.priority,
+      dueDate: 'dueDate' in data ? data.dueDate ?? null : current.dueDate ?? null,
+      estimatedHours: data.estimatedHours === undefined ? current.estimatedHours ?? null : data.estimatedHours,
+      progressPercent,
+    }),
+  })
+
   // Cập nhật status nếu có
-  if (data.status) {
+  if (data.status !== undefined && data.status !== current.status) {
     await updateTaskStatus(taskId, data.status)
   }
 
   // Cập nhật assignee nếu có
-  if (data.assigneeId !== undefined) {
+  if ('assigneeId' in data && (data.assigneeId ?? null) !== (current.assigneeId ?? null)) {
     await updateTaskAssignee(taskId, data.assigneeId)
   }
 }

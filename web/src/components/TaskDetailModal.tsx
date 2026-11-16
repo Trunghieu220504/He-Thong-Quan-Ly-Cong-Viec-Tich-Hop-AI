@@ -22,17 +22,7 @@ interface Props {
 }
 
 function getTaskKey(taskId: string): string {
-  const digits = taskId.replace(/\D/g, '')
-  if (digits.length >= 3) {
-    return `PMS-${digits.slice(-3)}`
-  }
-  let hash = 0
-  for (let i = 0; i < taskId.length; i++) {
-    hash = (hash << 5) - hash + taskId.charCodeAt(i)
-    hash |= 0
-  }
-  const num = 140 + Math.abs(hash % 30)
-  return `PMS-${num}`
+  return taskId
 }
 
 export function TaskDetailModal({ isOpen, task, members, isViewer = false, onClose }: Props) {
@@ -344,4 +334,3 @@ export function TaskDetailModal({ isOpen, task, members, isViewer = false, onClo
     </div>
   )
 }
-

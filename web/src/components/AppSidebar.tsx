@@ -213,4 +213,3 @@ export function AppSidebar({ onOpenCreateProject }: Props) {
     </aside>
   )
 }
-

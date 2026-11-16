@@ -243,9 +243,7 @@ export function ProjectBoardPage() {
       } else if (t.status === 'Done' && map.Done) {
         map.Done.push(t)
       } else if (t.status === 'InProgress') {
-        if (map.InReview && (t.description?.includes('[Review]') || t.title.includes('Docker'))) {
-          map.InReview.push(t)
-        } else if (map.InProgress) {
+        if (map.InProgress) {
           map.InProgress.push(t)
         } else if (columns[0]) {
           map[columns[0].id]?.push(t)
@@ -279,6 +277,11 @@ export function ProjectBoardPage() {
     const overTask = tasks.find((t) => t.id === over.id)
     if (overTask) {
       targetColId = overTask.status
+    }
+
+    if (!['Todo', 'InProgress', 'Done'].includes(targetColId)) {
+      setErrorMessage('Cột demo chỉ lưu bố cục trên trình duyệt, chưa hỗ trợ chuyển công việc.')
+      return
     }
 
     let nextBackendStatus: TaskStatus = 'InProgress'
@@ -470,7 +473,7 @@ export function ProjectBoardPage() {
         <div className="toolbar-right-controls">
           <div className="sprint-status-tag">
             <SprintIcon />
-            <span>Sprint 4</span>
+            <span>Sprint 4 (Demo)</span>
           </div>
 
           {/* Nút thêm cột mới linh hoạt */}
@@ -482,7 +485,7 @@ export function ProjectBoardPage() {
               title="Thêm cột Kanban tùy biến"
             >
               <PlusIcon />
-              <span>Thêm cột</span>
+              <span>Thêm cột demo</span>
             </button>
           )}
         </div>
@@ -521,6 +524,17 @@ export function ProjectBoardPage() {
         </div>
       )}
 
+      {tasks.length >= 100 && (
+        <div className="system-notice-alert" role="status">
+          Chỉ tải tối đa 100 công việc đầu tiên. Danh sách, bộ lọc và số liệu tổng hợp có thể chưa bao gồm toàn bộ dự án.
+        </div>
+      )}
+      {activeTab === 'board' && (
+        <div className="system-notice-alert" role="status">
+          In Review và cột tùy chỉnh là demo, chỉ lưu bố cục trên trình duyệt và không nhận công việc.
+        </div>
+      )}
+
       {/* TAB 1: BẢNG KANBAN BOARD */}
       {activeTab === 'board' && (
         <DndContext
@@ -535,7 +549,7 @@ export function ProjectBoardPage() {
                 <div key={col.id} style={{ position: 'relative' }}>
                   <KanbanColumn
                     status={col.id}
-                    title={col.title}
+                    title={['Todo', 'InProgress', 'Done'].includes(col.id) ? col.title : col.title + ' (Demo)'}
                     tasks={colTasks}
                     isViewer={isViewer}
                     isCollapsed={col.isCollapsed}
@@ -589,7 +603,7 @@ export function ProjectBoardPage() {
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ color: '#36b37e' }}>🔖</span>
-                        <span style={{ color: '#6b778c', fontSize: '0.78rem' }}>PMS-{140 + idx}</span>
+                        <span style={{ color: '#6b778c', fontSize: '0.78rem' }}>{t.id}</span>
                         <span style={{ color: '#0c66e4', textDecoration: 'none' }}>{t.title}</span>
                       </div>
                     </td>
@@ -628,7 +642,7 @@ export function ProjectBoardPage() {
       {/* TAB 3: TỔNG QUAN TIẾN ĐỘ & BÁO CÁO */}
       {activeTab === 'summary' && (
         <>
-        <div className="sprint-panel-grid"><section className="sprint-panel sprint-panel-progress"><div className="sprint-panel-title"><div><span>SPRINT 4</span><h2>Tiến độ sprint</h2></div><strong>{progressPercent}%</strong></div><div className="sprint-progress-track"><div style={{ width: `${progressPercent}%` }} /></div><div className="sprint-panel-meta"><span>{completedTasks} hoàn thành</span><span>{inProgressCount} đang làm</span><span>{todoCount} chưa bắt đầu</span></div></section><section className="sprint-panel"><div className="sprint-panel-title"><div><span>ƯỚC TÍNH</span><h2>Panel Sprint</h2></div><b className="sprint-label-should">should</b></div><div className="sprint-estimate"><strong>{sprintEstimate}</strong><span>điểm ước tính</span></div><div className="sprint-panel-meta"><span>{sprintCompletedEstimate} đã hoàn thành</span><span>{sprintRemainingEstimate} còn lại</span><b>Priority Low</b></div></section><section className="sprint-panel sprint-panel-people"><div className="sprint-panel-title"><div><span>PHÂN BỔ THEO NGƯỜI</span><h2>Hiệu suất thành viên</h2></div></div><div className="sprint-people-table"><div className="sprint-people-row sprint-people-head"><span>Người thực hiện</span><span>Task</span><span>Tiến độ</span></div>{assigneeSummary.map((member) => <div className="sprint-people-row" key={member.userId}><span className="sprint-person"><span className={`member-avatar-circle ${member.colorClass}`}>{member.initials}</span>{member.name}</span><span>{member.done}/{member.total}</span><span className="sprint-person-progress"><span><i style={{ width: `${member.progress}%` }} /></span>{member.progress}%</span></div>)}</div></section></div>
+        <div className="sprint-panel-grid"><section className="sprint-panel sprint-panel-progress"><div className="sprint-panel-title"><div><span>CÔNG VIỆC ĐÃ TẢI</span><h2>Tiến độ công việc</h2></div><strong>{progressPercent}%</strong></div><div className="sprint-progress-track"><div style={{ width: `${progressPercent}%` }} /></div><div className="sprint-panel-meta"><span>{completedTasks} hoàn thành</span><span>{inProgressCount} đang làm</span><span>{todoCount} chưa bắt đầu</span></div></section><section className="sprint-panel"><div className="sprint-panel-title"><div><span>ƯỚC TÍNH</span><h2>Panel Sprint (Demo)</h2></div><b className="sprint-label-should">should</b></div><div className="sprint-estimate"><strong>{sprintEstimate}</strong><span>điểm minh họa — không phải ước tính thực tế</span></div><div className="sprint-panel-meta"><span>{sprintCompletedEstimate} đã hoàn thành</span><span>{sprintRemainingEstimate} còn lại</span><b>Priority Low (Demo)</b></div></section><section className="sprint-panel sprint-panel-people"><div className="sprint-panel-title"><div><span>PHÂN BỔ THEO NGƯỜI</span><h2>Hiệu suất thành viên</h2></div></div><div className="sprint-people-table"><div className="sprint-people-row sprint-people-head"><span>Người thực hiện</span><span>Task</span><span>Tiến độ</span></div>{assigneeSummary.map((member) => <div className="sprint-people-row" key={member.userId}><span className="sprint-person"><span className={`member-avatar-circle ${member.colorClass}`}>{member.initials}</span>{member.name}</span><span>{member.done}/{member.total}</span><span className="sprint-person-progress"><span><i style={{ width: `${member.progress}%` }} /></span>{member.progress}%</span></div>)}</div></section></div>
         <div style={{ padding: '0 24px 24px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
           <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' }}>
             <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '14px' }}>Tiến độ hoàn thành</h3>
