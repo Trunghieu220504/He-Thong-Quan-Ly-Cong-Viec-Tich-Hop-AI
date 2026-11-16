@@ -101,7 +101,7 @@ export function ProjectsPage() {
         {!isLoading && !isError && projects.length > 0 && (
           <div className="projects-card-grid">
             {filtered.map((proj, idx) => {
-              const colors = ['bg-gradient-to-br from-[#ff5630] to-[#0052cc]', 'bg-[#6554c0]', 'bg-[#ff7452]', 'bg-[#0c66e4]']
+              const colors = ['bg-jira-redblue', 'bg-jira-purple', 'bg-jira-orange', 'bg-blue']
               const colorClass = colors[idx % colors.length]
 
               return (

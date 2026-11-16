@@ -8,6 +8,7 @@ import { ToastContainer } from './components/ToastContainer.tsx'
 import { LoginPage } from './pages/LoginPage.tsx'
 import { ProjectBoardPage } from './pages/ProjectBoardPage.tsx'
 import { ProjectsPage } from './pages/ProjectsPage.tsx'
+import './App.css'
 
 function MainLayout() {
   const [isCreateProjOpen, setIsCreateProjOpen] = useState(false)

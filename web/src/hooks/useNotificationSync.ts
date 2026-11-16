@@ -1,12 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { getNotifications } from '../api/notifications.ts'
+import { API_BASE_URL, IS_MOCK } from '../api/client.ts'
+import { getNotifications, toNotificationItem } from '../api/notifications.ts'
 import { useAuthStore } from '../stores/authStore.ts'
 import { toast } from '../stores/toastStore.ts'
-import type { NotificationItem } from '../types/notification.ts'
+import type { NotificationDto, NotificationItem } from '../types/notification.ts'
 
 // Cấu hình URL SignalR Hub cho Notifications
-const HUB_URL = import.meta.env.VITE_NOTIFICATION_HUB_URL || 'http://localhost:5046/hubs/notifications'
+const HUB_URL = import.meta.env.VITE_NOTIFICATION_HUB_URL || `${API_BASE_URL.replace(/\/$/, '')}/hubs/notifications`
 
 export function useNotificationSync() {
   const queryClient = useQueryClient()
@@ -48,7 +49,7 @@ export function useNotificationSync() {
 
   // Thiết lập SignalR với accessTokenFactory lấy token mới mỗi lần kết nối
   useEffect(() => {
-    if (!isAuthenticated || !tokens?.accessToken) return
+    if (IS_MOCK || !isAuthenticated || !tokens?.accessToken) return
 
     let isDisposed = false
 
@@ -58,23 +59,23 @@ export function useNotificationSync() {
       return currentTokens?.accessToken || ''
     }
 
-    // Thử kết nối SignalR qua dynamic import hoặc WebSocket fallback nếu backend sẵn sàng
+    // Polling tiếp tục hoạt động khi SignalR chưa kết nối được.
     async function initSignalR() {
       try {
-        // Kiểm tra xem @microsoft/signalr có khả dụng không
-        // @ts-expect-error dynamic import check
-        const signalR = await import('@microsoft/signalr').catch(() => null)
-        if (!signalR || isDisposed) return
+        const signalR = await import('@microsoft/signalr')
+        if (isDisposed) return
 
         const connection = new signalR.HubConnectionBuilder()
           .withUrl(HUB_URL, {
-            accessTokenFactory: () => accessTokenFactory(),
+            accessTokenFactory,
+            withCredentials: false,
           })
           .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
           .build()
 
-        connection.on('ReceiveNotification', (notif: NotificationItem) => {
+        connection.on('notificationReceived', (notification: NotificationDto) => {
           if (isDisposed) return
+          const notif = toNotificationItem(notification)
           seenNotificationIdsRef.current.add(notif.id)
           triggerToastForNotification(notif)
           queryClient.invalidateQueries({ queryKey: ['notifications'] })

@@ -70,7 +70,7 @@ describe('API modules', () => {
     await expect(login({ email: 'baoanh@example.com', password: 'Password123!' })).resolves.toEqual(tokens)
 
     expect(fetchMock.mock.calls[0]?.[0]).toContain('/api/auth/login')
-    expect(JSON.parse((fetchMock.mock.calls[0]?.[1] as RequestInit).body as string)).toEqual({
+    expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)).toEqual({
       email: 'baoanh@example.com',
       password: 'Password123!',
     })
@@ -95,9 +95,9 @@ describe('API modules', () => {
     await updateTaskStatus('task-1', 'Done')
 
     expect(fetchMock.mock.calls[0]?.[0]).toContain('/api/projects/project-1/tasks')
-    expect((fetchMock.mock.calls[0]?.[1] as RequestInit).method).toBe('POST')
+    expect((fetchMock.mock.calls[0][1] as RequestInit).method).toBe('POST')
     expect(fetchMock.mock.calls[1]?.[0]).toContain('/api/tasks/task-1/status')
-    expect(JSON.parse((fetchMock.mock.calls[1]?.[1] as RequestInit).body as string)).toEqual({ status: 'Done' })
+    expect(JSON.parse((fetchMock.mock.calls[1][1] as RequestInit).body as string)).toEqual({ status: 'Done' })
   })
 
   it('returns no risk when the AI endpoint is unavailable', async () => {

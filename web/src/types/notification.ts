@@ -11,6 +11,8 @@ export interface NotificationItem {
   projectId?: string
 }
 
+export type NotificationDto = Omit<NotificationItem, 'type'> & { type: string }
+
 export interface NotificationsResponse {
   items: NotificationItem[]
   unreadCount: number

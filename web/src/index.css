@@ -36,6 +36,11 @@
   --jira-radius-md: 6px;
   --jira-radius-lg: 8px;
   --jira-radius-xl: 12px;
+
+  --border: var(--jira-border);
+  --text-muted: var(--jira-text-muted);
+  --text-light: var(--jira-text-light);
+  --bg-subtle: var(--jira-column-bg);
 }
 
 * {
@@ -63,20 +68,20 @@ body {
 /* ==========================================================================
    1. Root Layout & Jira Shell
    ========================================================================== */
-.jira-root-container {
+.app-root-shell {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-.jira-app-body {
+.app-workspace-body {
   display: flex;
   flex: 1;
   min-height: calc(100vh - 56px);
   position: relative;
 }
 
-.jira-main-content {
+.app-main-content {
   flex: 1;
   min-width: 0;
   background-color: #ffffff;
@@ -87,7 +92,7 @@ body {
 /* ==========================================================================
    2. Global Header
    ========================================================================== */
-.jira-global-header {
+.global-app-header {
   height: 56px;
   background-color: #ffffff;
   border-bottom: 1px solid var(--jira-border-light);
@@ -100,13 +105,13 @@ body {
   z-index: 100;
 }
 
-.jira-header-left {
+.header-brand-section {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.jira-brand {
+.brand-logo-link {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -114,14 +119,23 @@ body {
   color: var(--jira-text-dark);
 }
 
-.jira-brand-name {
+.brand-title {
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--jira-text-dark);
   letter-spacing: -0.2px;
 }
 
-.jira-mock-pill {
+.brand-subtitle {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: var(--jira-blue-light);
+  color: var(--jira-blue);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.mock-mode-pill {
   background-color: #fffae6;
   border: 1px solid #ffe380;
   color: #b76e00;
@@ -131,7 +145,7 @@ body {
   border-radius: 10px;
 }
 
-.jira-header-icon-btn {
+.header-icon-btn {
   background: none;
   border: none;
   color: #42526e;
@@ -146,32 +160,32 @@ body {
   position: relative;
 }
 
-.jira-header-icon-btn:hover {
+.header-icon-btn:hover {
   background-color: rgba(9, 30, 66, 0.08);
   color: var(--jira-text-dark);
 }
 
-.jira-header-center {
+.header-search-section {
   flex: 1;
   max-width: 520px;
   margin: 0 24px;
 }
 
-.jira-search-wrapper {
+.search-input-box {
   position: relative;
   display: flex;
   align-items: center;
   width: 100%;
 }
 
-.jira-search-icon {
+.search-icon-inside {
   position: absolute;
   left: 12px;
   color: var(--jira-text-muted);
   pointer-events: none;
 }
 
-.jira-global-search-input {
+.global-search-input {
   width: 100%;
   height: 34px;
   border-radius: 4px;
@@ -183,19 +197,19 @@ body {
   transition: all 0.15s ease;
 }
 
-.jira-global-search-input:focus {
+.global-search-input:focus {
   outline: none;
   border-color: var(--jira-blue);
   box-shadow: 0 0 0 2px rgba(12, 102, 228, 0.2);
 }
 
-.jira-header-right {
+.header-actions-section {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.jira-create-btn {
+.action-create-btn {
   background-color: var(--jira-blue);
   color: #ffffff;
   border: none;
@@ -211,11 +225,11 @@ body {
   transition: background-color 0.15s ease;
 }
 
-.jira-create-btn:hover {
+.action-create-btn:hover {
   background-color: var(--jira-blue-hover);
 }
 
-.jira-limited-users-badge {
+.status-badge-pill {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -228,15 +242,15 @@ body {
   border-radius: 14px;
 }
 
-.jira-warning-icon {
+.badge-icon {
   font-size: 0.85rem;
 }
 
-.jira-bell-btn {
+.notification-bell-btn {
   position: relative;
 }
 
-.jira-notification-count {
+.notification-badge-count {
   position: absolute;
   top: 1px;
   right: 1px;
@@ -250,11 +264,11 @@ body {
 }
 
 /* User Profile Menu */
-.jira-profile-dropdown-wrapper {
+.profile-menu-container {
   position: relative;
 }
 
-.jira-avatar-btn {
+.user-avatar-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -262,7 +276,7 @@ body {
   border-radius: 50%;
 }
 
-.jira-avatar-circle {
+.user-avatar-circle {
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -276,7 +290,7 @@ body {
   letter-spacing: 0.5px;
 }
 
-.jira-profile-menu {
+.profile-dropdown-card {
   position: absolute;
   top: 40px;
   right: 0;
@@ -289,29 +303,29 @@ body {
   z-index: 120;
 }
 
-.jira-profile-info {
+.profile-info-block {
   padding: 8px 16px;
 }
 
-.jira-profile-name {
+.profile-display-name {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--jira-text-dark);
 }
 
-.jira-profile-email {
+.profile-email-text {
   font-size: 0.75rem;
   color: var(--jira-text-muted);
   margin-top: 2px;
 }
 
-.jira-profile-divider {
+.profile-menu-separator {
   height: 1px;
   background-color: var(--jira-border-light);
   margin: 6px 0;
 }
 
-.jira-profile-menu-item {
+.profile-menu-action {
   width: 100%;
   padding: 8px 16px;
   text-align: left;
@@ -322,18 +336,18 @@ body {
   cursor: pointer;
 }
 
-.jira-profile-menu-item:hover {
+.profile-menu-action:hover {
   background-color: rgba(9, 30, 66, 0.04);
 }
 
-.jira-profile-menu-item.logout {
+.profile-menu-action.logout {
   color: var(--jira-red);
 }
 
 /* ==========================================================================
    3. Collapsible Left Sidebar
    ========================================================================== */
-.jira-sidebar {
+.app-sidebar {
   width: 240px;
   background-color: var(--jira-sidebar-bg);
   border-right: 1px solid var(--jira-border-light);
@@ -343,7 +357,7 @@ body {
   flex-shrink: 0;
 }
 
-.jira-sidebar-inner {
+.sidebar-inner {
   padding: 16px 10px;
   overflow-y: auto;
   flex: 1;
@@ -351,7 +365,7 @@ body {
   flex-direction: column;
 }
 
-.jira-sidebar-collapsed {
+.sidebar-collapsed {
   width: 46px;
   background-color: var(--jira-sidebar-bg);
   border-right: 1px solid var(--jira-border-light);
@@ -362,7 +376,7 @@ body {
   flex-shrink: 0;
 }
 
-.jira-sidebar-toggle-btn {
+.sidebar-toggle-btn {
   background: none;
   border: 1px solid var(--jira-border);
   width: 26px;
@@ -377,14 +391,14 @@ body {
   margin-bottom: 16px;
 }
 
-.jira-collapsed-icons {
+.sidebar-collapsed-icons {
   display: flex;
   flex-direction: column;
   gap: 12px;
   align-items: center;
 }
 
-.jira-collapsed-item {
+.sidebar-collapsed-item {
   width: 32px;
   height: 32px;
   border-radius: 6px;
@@ -398,11 +412,11 @@ body {
   text-decoration: none;
 }
 
-.jira-collapsed-item:hover {
+.sidebar-collapsed-item:hover {
   background-color: rgba(9, 30, 66, 0.08);
 }
 
-.jira-sidebar-collapse-edge-btn {
+.sidebar-collapse-edge-btn {
   position: absolute;
   top: 18px;
   right: -12px;
@@ -422,23 +436,23 @@ body {
   transition: opacity 0.2s ease;
 }
 
-.jira-sidebar:hover .jira-sidebar-collapse-edge-btn {
+.app-sidebar:hover .sidebar-collapse-edge-btn {
   opacity: 1;
 }
 
-.jira-sidebar-divider {
+.sidebar-divider {
   height: 1px;
   background-color: var(--jira-border-light);
   margin: 12px 6px;
 }
 
-.jira-nav-group {
+.sidebar-nav-group {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.jira-nav-item {
+.sidebar-nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -454,42 +468,42 @@ body {
   transition: background-color 0.12s ease;
 }
 
-.jira-nav-item:hover {
+.sidebar-nav-item:hover {
   background-color: rgba(9, 30, 66, 0.06);
 }
 
-.jira-nav-icon {
+.sidebar-nav-icon {
   color: var(--jira-text-subtle);
   flex-shrink: 0;
 }
 
-.jira-nav-label {
+.sidebar-nav-label {
   flex: 1;
 }
 
-.jira-nav-chevron {
+.sidebar-nav-chevron {
   color: var(--jira-text-light);
 }
 
-.jira-nav-external {
+.sidebar-nav-external {
   color: var(--jira-text-light);
   margin-left: auto;
 }
 
 /* Sections inside Sidebar */
-.jira-nav-section {
+.sidebar-nav-section {
   display: flex;
   flex-direction: column;
 }
 
-.jira-section-header {
+.sidebar-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 6px 10px;
 }
 
-.jira-section-title {
+.sidebar-section-title {
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--jira-text-muted);
@@ -497,13 +511,13 @@ body {
   letter-spacing: 0.5px;
 }
 
-.jira-section-actions {
+.sidebar-section-actions {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.jira-icon-btn-ghost {
+.icon-btn-ghost {
   background: none;
   border: none;
   width: 24px;
@@ -516,25 +530,31 @@ body {
   color: var(--jira-text-subtle);
 }
 
-.jira-icon-btn-ghost:hover {
+.icon-btn-ghost:hover {
   background-color: rgba(9, 30, 66, 0.08);
   color: var(--jira-text-dark);
 }
 
-.jira-subsection-title {
+.sidebar-subsection-title {
   font-size: 0.72rem;
   font-weight: 600;
   color: var(--jira-text-light);
   padding: 6px 10px 4px 10px;
 }
 
-.jira-spaces-list {
+.sidebar-empty-state {
+  padding: 8px 10px;
+  color: var(--jira-text-light);
+  font-size: 0.75rem;
+}
+
+.spaces-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.jira-space-item {
+.space-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -548,18 +568,18 @@ body {
   border-left: 3px solid transparent;
 }
 
-.jira-space-item:hover {
+.space-item:hover {
   background-color: rgba(9, 30, 66, 0.06);
 }
 
-.jira-space-item.active {
+.space-item.active {
   background-color: var(--jira-blue-subtle);
   color: var(--jira-blue);
   font-weight: 600;
   border-left-color: var(--jira-blue);
 }
 
-.jira-space-avatar {
+.space-avatar-circle {
   width: 20px;
   height: 20px;
   border-radius: 3px;
@@ -588,18 +608,18 @@ body {
   background: #0c66e4;
 }
 
-.jira-space-name {
+.space-name {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
 }
 
-.jira-space-item.mock-item {
+.space-item.mock-item {
   color: var(--jira-text-subtle);
 }
 
-.jira-nav-sublink {
+.sidebar-nav-sublink {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -610,22 +630,22 @@ body {
   border-radius: 4px;
 }
 
-.jira-nav-sublink:hover {
+.sidebar-nav-sublink:hover {
   background-color: rgba(9, 30, 66, 0.04);
   color: var(--jira-text-dark);
 }
 
-.jira-space-item.roadmap-item {
+.space-item.roadmap-item {
   border: none;
   width: 100%;
   background: none;
 }
 
-.jira-roadmap-icon {
+.roadmap-icon {
   font-size: 0.9rem;
 }
 
-.jira-badge-try {
+.badge-pill {
   background-color: #eae6ff;
   color: #403294;
   font-size: 0.68rem;
@@ -635,7 +655,7 @@ body {
   margin-left: auto;
 }
 
-.jira-sidebar-footer {
+.sidebar-footer {
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid var(--jira-border-light);
@@ -644,19 +664,19 @@ body {
 /* ==========================================================================
    4. Space Header & Navigation Tabs
    ========================================================================== */
-.jira-board-page-wrapper {
+.board-page-main-wrapper {
   display: flex;
   flex-direction: column;
   flex: 1;
   background-color: #ffffff;
 }
 
-.jira-space-header {
+.space-header-container {
   padding: 16px 24px 0 24px;
   border-bottom: 1px solid var(--jira-border-light);
 }
 
-.jira-breadcrumbs {
+.breadcrumbs-navigation {
   font-size: 0.8rem;
   color: var(--jira-text-muted);
   margin-bottom: 8px;
@@ -665,11 +685,11 @@ body {
   gap: 6px;
 }
 
-.jira-breadcrumb-sep {
+.breadcrumb-separator {
   color: var(--jira-text-light);
 }
 
-.jira-space-title-row {
+.space-headline-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -677,13 +697,14 @@ body {
   flex-wrap: wrap;
 }
 
-.jira-space-title-left {
+.space-identity-box {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 10px;
 }
 
-.jira-space-main-icon {
+.space-color-badge {
   width: 26px;
   height: 26px;
   border-radius: 4px;
@@ -693,7 +714,7 @@ body {
   background: linear-gradient(135deg, #ff5630, #0052cc);
 }
 
-.jira-icon-inner {
+.color-badge-inner {
   width: 12px;
   height: 12px;
   border-radius: 2px;
@@ -701,14 +722,15 @@ body {
   opacity: 0.85;
 }
 
-.jira-space-heading {
+.space-primary-title {
   font-size: 1.35rem;
   font-weight: 700;
   color: var(--jira-text-dark);
   letter-spacing: -0.2px;
+  overflow-wrap: anywhere;
 }
 
-.jira-members-pill-btn {
+.members-counter-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -722,19 +744,19 @@ body {
   transition: all 0.15s ease;
 }
 
-.jira-members-pill-btn:hover {
+.members-counter-btn:hover {
   background-color: var(--jira-column-bg);
   color: var(--jira-text-dark);
 }
 
-.jira-space-actions-right {
+.space-top-actions {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 /* Secondary Horizontal Tabs */
-.jira-horizontal-tabs {
+.view-mode-tabs-bar {
   display: flex;
   align-items: center;
   gap: 20px;
@@ -742,7 +764,7 @@ body {
   overflow-x: auto;
 }
 
-.jira-tab-item {
+.view-mode-tab-item {
   padding: 8px 2px 10px 2px;
   background: none;
   border: none;
@@ -755,11 +777,11 @@ body {
   transition: all 0.15s ease;
 }
 
-.jira-tab-item:hover {
+.view-mode-tab-item:hover {
   color: var(--jira-text-dark);
 }
 
-.jira-tab-item.active {
+.view-mode-tab-item.active {
   color: var(--jira-blue);
   border-bottom-color: var(--jira-blue);
   font-weight: 600;
@@ -768,7 +790,7 @@ body {
 /* ==========================================================================
    5. Board Toolbar & Filters
    ========================================================================== */
-.jira-board-toolbar {
+.board-toolbar-strip {
   padding: 14px 24px;
   display: flex;
   align-items: center;
@@ -777,20 +799,20 @@ body {
   flex-wrap: wrap;
 }
 
-.jira-toolbar-left {
+.toolbar-left-controls {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
 }
 
-.jira-board-search-box {
+.board-search-container {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.jira-board-search-input {
+.board-search-input {
   height: 32px;
   width: 170px;
   border: 1px solid var(--jira-border);
@@ -801,14 +823,14 @@ body {
   transition: all 0.15s ease;
 }
 
-.jira-board-search-input:focus {
+.board-search-input:focus {
   width: 220px;
   outline: none;
   border-color: var(--jira-blue);
   box-shadow: 0 0 0 2px rgba(12, 102, 228, 0.2);
 }
 
-.jira-clear-search-btn {
+.search-clear-btn {
   position: absolute;
   right: 6px;
   background: none;
@@ -818,13 +840,13 @@ body {
   font-size: 0.75rem;
 }
 
-.jira-avatar-filter-group {
+.avatar-filters-cluster {
   display: flex;
   align-items: center;
   margin-left: 4px;
 }
 
-.jira-filter-avatar {
+.avatar-filter-pill {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -841,16 +863,16 @@ body {
   position: relative;
 }
 
-.jira-filter-avatar:first-child {
+.avatar-filter-pill:first-child {
   margin-left: 0;
 }
 
-.jira-filter-avatar:hover {
+.avatar-filter-pill:hover {
   transform: translateY(-2px);
   z-index: 5;
 }
 
-.jira-filter-avatar.is-selected {
+.avatar-filter-pill.is-selected {
   outline: 2px solid var(--jira-blue);
   outline-offset: 2px;
   transform: translateY(-2px);
@@ -865,7 +887,7 @@ body {
 .avatar-blue { background-color: #0052cc; }
 .avatar-purple { background-color: #5243aa; }
 
-.jira-toolbar-btn {
+:is(.filter-dropdown-select, .add-column-toggle-btn, .ghost-icon-button) {
   height: 32px;
   padding: 0 10px;
   border-radius: 4px;
@@ -881,17 +903,17 @@ body {
   transition: background-color 0.15s ease;
 }
 
-.jira-toolbar-btn:hover {
+:is(.filter-dropdown-select, .add-column-toggle-btn, .ghost-icon-button):hover {
   background-color: rgba(9, 30, 66, 0.04);
 }
 
-.jira-toolbar-right {
+.toolbar-right-controls {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.jira-sprint-badge {
+.sprint-status-tag {
   height: 32px;
   padding: 0 10px;
   border: 1px solid var(--jira-border);
@@ -906,7 +928,7 @@ body {
   cursor: pointer;
 }
 
-.jira-notice-banner {
+.system-notice-alert {
   margin: 0 24px 14px 24px;
   padding: 10px 14px;
   border-radius: 4px;
@@ -916,19 +938,19 @@ body {
   justify-content: space-between;
 }
 
-.jira-notice-banner.info {
+.system-notice-alert.info {
   background-color: #deebff;
   border: 1px solid #b3d4ff;
   color: #0747a6;
 }
 
-.jira-notice-banner.error {
+.system-notice-alert.error {
   background-color: #ffebe6;
   border: 1px solid #ffbdad;
   color: #bf2600;
 }
 
-.jira-notice-close-btn {
+.alert-close-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -939,7 +961,7 @@ body {
 /* ==========================================================================
    6. Kanban Board Columns Container
    ========================================================================== */
-.jira-board-container {
+.kanban-columns-container {
   display: flex;
   align-items: flex-start;
   gap: 14px;
@@ -948,7 +970,7 @@ body {
   flex: 1;
 }
 
-.jira-column {
+.kanban-column-wrapper {
   background-color: var(--jira-column-bg);
   border-radius: var(--jira-radius-lg);
   width: 290px;
@@ -961,25 +983,25 @@ body {
   border: 1px solid transparent;
 }
 
-.jira-column.drag-over {
+.kanban-column-wrapper.drag-over {
   background-color: #e9f2ff;
   border-color: var(--jira-blue);
 }
 
-.jira-column-header {
+.column-header-bar {
   padding: 12px 14px 8px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.jira-column-title-wrap {
+.column-title-box {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.jira-column-title {
+.column-title-text {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--jira-text-subtle);
@@ -987,7 +1009,7 @@ body {
   letter-spacing: 0.3px;
 }
 
-.jira-column-count {
+.column-task-counter {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--jira-text-subtle);
@@ -996,7 +1018,7 @@ body {
   border-radius: 10px;
 }
 
-.jira-column-collapse-btn {
+.column-collapse-btn {
   background: none;
   border: none;
   color: var(--jira-text-muted);
@@ -1009,13 +1031,13 @@ body {
   justify-content: center;
 }
 
-.jira-column-collapse-btn:hover {
+.column-collapse-btn:hover {
   background-color: rgba(9, 30, 66, 0.08);
   color: var(--jira-text-dark);
 }
 
 /* Cột thu gọn (Collapsed Column) */
-.jira-column.collapsed {
+.kanban-column-wrapper.collapsed {
   width: 44px;
   min-width: 44px;
   max-width: 44px;
@@ -1025,11 +1047,11 @@ body {
   padding: 10px 4px;
 }
 
-.jira-column.collapsed:hover {
+.kanban-column-wrapper.collapsed:hover {
   background-color: #ebecf0;
 }
 
-.jira-column-expand-btn {
+.column-expand-btn {
   background: none;
   border: none;
   color: var(--jira-text-muted);
@@ -1043,7 +1065,7 @@ body {
   margin-bottom: 16px;
 }
 
-.jira-collapsed-column-label {
+.collapsed-column-vertical-label {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   display: flex;
@@ -1057,7 +1079,7 @@ body {
 }
 
 /* Thân cột & danh sách thẻ */
-.jira-column-tasks {
+.column-tasks-scroll-area {
   padding: 6px 10px 10px 10px;
   display: flex;
   flex-direction: column;
@@ -1066,7 +1088,7 @@ body {
   flex: 1;
 }
 
-.jira-column-empty {
+.column-empty-placeholder {
   text-align: center;
   padding: 30px 12px;
   color: var(--jira-text-light);
@@ -1076,11 +1098,11 @@ body {
   margin: 6px 0;
 }
 
-.jira-column-footer {
+.column-footer-bar {
   padding: 4px 10px 10px 10px;
 }
 
-.jira-quick-add-btn {
+.column-quick-add-btn {
   width: 100%;
   height: 30px;
   background-color: transparent;
@@ -1094,7 +1116,7 @@ body {
   transition: background-color 0.15s ease;
 }
 
-.jira-quick-add-btn:hover {
+.column-quick-add-btn:hover {
   background-color: rgba(9, 30, 66, 0.08);
   color: var(--jira-text-dark);
 }
@@ -1102,7 +1124,7 @@ body {
 /* ==========================================================================
    7. Jira Issue Card
    ========================================================================== */
-.jira-card {
+.task-issue-card {
   background-color: var(--jira-card-bg);
   border: 1px solid var(--jira-border);
   border-radius: var(--jira-radius-md);
@@ -1115,17 +1137,17 @@ body {
   flex-direction: column;
 }
 
-.jira-card:hover {
+.task-issue-card:hover {
   box-shadow: var(--jira-shadow-card-hover);
   border-color: #cbd5e1;
 }
 
-.jira-card.is-dragging {
+.task-issue-card.is-dragging {
   opacity: 0.45;
   box-shadow: 0 10px 20px rgba(9, 30, 66, 0.3);
 }
 
-.jira-card-title {
+.task-issue-title {
   font-size: 0.885rem;
   font-weight: 500;
   color: var(--jira-text-dark);
@@ -1134,11 +1156,11 @@ body {
 }
 
 /* Tag / Component Badge */
-.jira-card-tag-wrapper {
+.task-issue-tag-wrapper {
   margin-bottom: 12px;
 }
 
-.jira-card-tag {
+.task-issue-tag {
   display: inline-block;
   font-size: 0.72rem;
   font-weight: 600;
@@ -1178,30 +1200,30 @@ body {
 }
 
 /* Hàng Metadata */
-.jira-card-meta-row {
+.task-issue-meta-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: auto;
 }
 
-.jira-meta-left {
+.task-meta-left-group {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.jira-bookmark-icon {
+.task-bookmark-icon {
   flex-shrink: 0;
 }
 
-.jira-issue-key {
+.task-key-label {
   font-size: 0.76rem;
   font-weight: 500;
   color: var(--jira-text-muted);
 }
 
-.jira-story-points {
+.task-story-points {
   font-size: 0.72rem;
   font-weight: 600;
   color: var(--jira-text-subtle);
@@ -1210,12 +1232,12 @@ body {
   border-radius: 4px;
 }
 
-.jira-done-check {
+.task-done-check {
   margin-left: 2px;
 }
 
 /* Chip dự đoán rủi ro AI theo phong cách Atlassian Intelligence */
-.jira-risk-badge {
+.risk-chip {
   font-size: 0.68rem;
   font-weight: 700;
   padding: 1px 5px;
@@ -1223,32 +1245,32 @@ body {
   text-transform: uppercase;
 }
 
-.jira-risk-badge.low {
+.risk-chip.low {
   background-color: #e3fcef;
   color: #006644;
 }
 
-.jira-risk-badge.medium {
+.risk-chip.medium {
   background-color: #fffae6;
   color: #b76e00;
 }
 
-.jira-risk-badge.high {
+.risk-chip.high {
   background-color: #ffebe6;
   color: #bf2600;
 }
 
-.jira-risk-badge.loading {
+.risk-chip.loading {
   background-color: #f4f5f7;
   color: var(--jira-text-muted);
 }
 
-.jira-meta-right {
+.task-meta-right-group {
   display: flex;
   align-items: center;
 }
 
-.jira-assignee-avatar {
+.member-avatar-circle {
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -1261,7 +1283,7 @@ body {
 }
 
 /* Thanh Subtasks */
-.jira-subtasks-row {
+.task-subtasks-strip {
   margin-top: 10px;
   padding-top: 8px;
   border-top: 1px solid var(--jira-border-light);
@@ -1272,27 +1294,27 @@ body {
   color: var(--jira-text-muted);
 }
 
-.jira-subtasks-left {
+.task-subtasks-info {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.jira-subtasks-chevron {
+.task-subtasks-chevron {
   color: var(--jira-text-light);
 }
 
 /* ==========================================================================
    8. Projects List Page (Spaces Directory)
    ========================================================================== */
-.jira-projects-grid {
+.projects-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 16px;
   margin-top: 16px;
 }
 
-.jira-project-card {
+.project-display-card {
   background-color: #ffffff;
   border: 1px solid var(--jira-border);
   border-radius: var(--jira-radius-lg);
@@ -1306,31 +1328,31 @@ body {
   justify-content: space-between;
 }
 
-.jira-project-card:hover {
+.project-display-card:hover {
   box-shadow: var(--jira-shadow-card-hover);
   border-color: #cbd5e1;
   transform: translateY(-1px);
 }
 
-.jira-proj-card-top {
+.project-card-header-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
 }
 
-.jira-proj-card-title {
+.project-headline-text {
   font-size: 1rem;
   font-weight: 600;
   color: var(--jira-text-dark);
 }
 
-.jira-proj-key {
+.project-key-label {
   font-size: 0.75rem;
   color: var(--jira-text-muted);
 }
 
-.jira-role-pill {
+:is(.role-badge-tag, .role-badge) {
   font-size: 0.72rem;
   padding: 2px 8px;
   border-radius: 10px;
@@ -1338,12 +1360,12 @@ body {
   text-transform: uppercase;
 }
 
-.jira-role-pill.role-Owner { background-color: #deebff; color: #0747a6; }
-.jira-role-pill.role-Admin { background-color: #fffae6; color: #b76e00; }
-.jira-role-pill.role-Member { background-color: #e3fcef; color: #006644; }
-.jira-role-pill.role-Viewer { background-color: #f4f5f7; color: #42526e; }
+:is(.role-badge-tag, .role-badge).role-Owner { background-color: #deebff; color: #0747a6; }
+:is(.role-badge-tag, .role-badge).role-Admin { background-color: #fffae6; color: #b76e00; }
+:is(.role-badge-tag, .role-badge).role-Member { background-color: #e3fcef; color: #006644; }
+:is(.role-badge-tag, .role-badge).role-Viewer { background-color: #f4f5f7; color: #42526e; }
 
-.jira-proj-card-desc {
+.project-card-description {
   font-size: 0.85rem;
   color: var(--jira-text-subtle);
   margin: 12px 0 16px 0;
@@ -1353,7 +1375,7 @@ body {
   overflow: hidden;
 }
 
-.jira-proj-card-footer {
+.project-card-footer-info {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1456,10 +1478,13 @@ body {
   resize: vertical;
 }
 
-.btn {
+.btn,
+.primary-accent-btn,
+.action-button-neutral {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   padding: 6px 14px;
   border-radius: 4px;
   font-size: 0.875rem;
@@ -1469,22 +1494,24 @@ body {
   text-decoration: none;
 }
 
-.btn-primary, .jira-btn-primary {
+.btn-primary, .primary-accent-btn {
   background-color: var(--jira-blue);
   color: #ffffff;
 }
 
-.btn-primary:hover:not(:disabled) {
+.btn-primary:hover:not(:disabled),
+.primary-accent-btn:hover:not(:disabled) {
   background-color: var(--jira-blue-hover);
 }
 
-.btn-secondary, .jira-btn-secondary {
+.btn-secondary, .action-button-neutral {
   background-color: rgba(9, 30, 66, 0.04);
   color: var(--jira-text-dark);
   border: 1px solid var(--jira-border);
 }
 
-.btn-secondary:hover:not(:disabled) {
+.btn-secondary:hover:not(:disabled),
+.action-button-neutral:hover:not(:disabled) {
   background-color: rgba(9, 30, 66, 0.08);
 }
 
@@ -1513,7 +1540,7 @@ body {
 }
 
 /* Spinner & State */
-.jira-state-box {
+.status-state-box {
   text-align: center;
   padding: 48px 24px;
   margin: 24px;
@@ -1522,7 +1549,7 @@ body {
   border-radius: 8px;
 }
 
-.jira-state-desc {
+.state-description-text {
   font-size: 0.9rem;
   color: var(--jira-text-muted);
   margin-top: 8px;
@@ -1997,7 +2024,7 @@ body {
   max-height: 380px;
   overflow-y: auto;
   display: flex;
-  flex-col;
+  flex-direction: column;
 }
 
 .notification-list-item {

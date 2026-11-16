@@ -267,9 +267,21 @@ export function TaskCard({ task, isViewer = false, onEdit, onChangeStatus }: Pro
 
           {isDone && <CheckmarkIcon className="task-done-check" />}
 
-          {task.priority === 'High' && <PriorityUpIcon title="Ưu tiên: Khẩn cấp" />}
-          {task.priority === 'Medium' && <PriorityEqualIcon title="Ưu tiên: Trung bình" />}
-          {task.priority === 'Low' && <PriorityDownIcon title="Ưu tiên: Thấp" />}
+          {task.priority === 'High' && (
+            <span title="Ưu tiên: Khẩn cấp" role="img" aria-label="Ưu tiên: Khẩn cấp">
+              <PriorityUpIcon aria-hidden="true" />
+            </span>
+          )}
+          {task.priority === 'Medium' && (
+            <span title="Ưu tiên: Trung bình" role="img" aria-label="Ưu tiên: Trung bình">
+              <PriorityEqualIcon aria-hidden="true" />
+            </span>
+          )}
+          {task.priority === 'Low' && (
+            <span title="Ưu tiên: Thấp" role="img" aria-label="Ưu tiên: Thấp">
+              <PriorityDownIcon aria-hidden="true" />
+            </span>
+          )}
 
           {renderRiskBadge()}
         </div>

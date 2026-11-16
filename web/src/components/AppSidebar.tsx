@@ -4,10 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { getProjects } from '../api/projects.ts'
 import {
   AppsIcon,
+  ChartIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ClockIcon,
-  DashboardIcon,
   ExportIcon,
   FilterIcon,
   PlusIcon,
@@ -23,7 +23,7 @@ interface Props {
 
 // Băm tên dự án thành màu avatar ngẫu nhiên nhưng nhất quán
 function getProjectColorClass(name: string): string {
-  const colors = ['bg-gradient-to-br from-[#ff5630] to-[#0052cc]', 'bg-[#6554c0]', 'bg-[#ff7452]', 'bg-[#0c66e4]', 'bg-[#00875a]', 'bg-[#00a3bf]']
+  const colors = ['bg-jira-redblue', 'bg-jira-purple', 'bg-jira-orange', 'bg-blue', 'avatar-green', 'avatar-cyan']
   let hash = 0
   for (let i = 0; i < name.length; i++) {
     hash = (hash << 5) - hash + name.charCodeAt(i)
@@ -62,13 +62,13 @@ export function AppSidebar({ onOpenCreateProject }: Props) {
 
         <div className="sidebar-collapsed-icons">
           <Link to="/projects" className="sidebar-collapsed-item" title="Không gian làm việc (Spaces)">
-            <span className="space-avatar-circle bg-[#0c66e4]">S</span>
+            <span className="space-avatar-circle bg-blue">S</span>
           </Link>
           <button type="button" className="sidebar-collapsed-item" title="Bộ lọc">
             <FilterIcon />
           </button>
           <button type="button" className="sidebar-collapsed-item" title="Bảng điều khiển">
-            <DashboardIcon />
+            <ChartIcon />
           </button>
           <button type="button" className="sidebar-collapsed-item" title="Đội ngũ">
             <UsersGroupIcon />
@@ -147,7 +147,7 @@ export function AppSidebar({ onOpenCreateProject }: Props) {
                 )
               })
             ) : (
-              <div className="text-xs text-gray-400 px-2 py-2">
+              <div className="sidebar-empty-state">
                 Chưa có không gian dự án nào
               </div>
             )}
@@ -179,7 +179,7 @@ export function AppSidebar({ onOpenCreateProject }: Props) {
             <span className="sidebar-nav-label">Bộ lọc công việc</span>
           </button>
           <button type="button" className="sidebar-nav-item">
-            <DashboardIcon className="sidebar-nav-icon" />
+            <ChartIcon className="sidebar-nav-icon" />
             <span className="sidebar-nav-label">Bảng báo cáo tiến độ</span>
           </button>
           <button type="button" className="sidebar-nav-item">

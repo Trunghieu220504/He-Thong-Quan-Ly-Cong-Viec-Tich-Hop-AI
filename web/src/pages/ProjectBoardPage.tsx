@@ -19,17 +19,10 @@ import { TaskCard } from '../components/TaskCard.tsx'
 import { TaskDetailModal } from '../components/TaskDetailModal.tsx'
 import type { TaskItem, TaskStatus } from '../types/task.ts'
 import {
-  ChartIcon,
-  ChevronDownIcon,
-  ExportIcon,
-  FilterIcon,
   FullscreenIcon,
-  GroupIcon,
-  MoreHorizontalIcon,
   PlusIcon,
   SearchIcon,
   ShareIcon,
-  SlidersIcon,
   SprintIcon,
   UsersGroupIcon,
 } from '../components/AppIcons.tsx'

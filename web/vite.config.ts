@@ -10,6 +10,7 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    env: { VITE_USE_MOCK: 'false' },
     include: ['src/**/*.test.ts'],
     restoreMocks: true,
   },
