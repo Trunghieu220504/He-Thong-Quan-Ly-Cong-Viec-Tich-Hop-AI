@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using RiskAI.Application.Risk;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -23,6 +24,12 @@ public static class RiskAIEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : ToProblem(result);
         });
 
+        app.MapGet("/api/projects/{projectId:guid}/risks", async (Guid projectId, ClaimsPrincipal user, ISender sender, CancellationToken ct) =>
+        {
+            if (!TryGetUserId(user, out var userId)) return Results.Unauthorized();
+            var result = await sender.Send(new GetProjectRisksQuery(projectId, userId), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : ToProblem(result);
+        }).WithTags("RiskAI").RequireAuthorization();
         return app;
     }
 
