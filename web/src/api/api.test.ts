@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { apiClient, type ApiError } from './client.ts'
 import { login } from './auth.ts'
 import { getProjects } from './projects.ts'
-import { createTask, getTasks, updateTaskStatus } from './tasks.ts'
+import { createTask, getTasks, updateTask, updateTaskStatus } from './tasks.ts'
 import { getTaskRisk } from './risk.ts'
 import { useAuthStore } from '../stores/authStore.ts'
 
@@ -98,6 +98,34 @@ describe('API modules', () => {
     expect((fetchMock.mock.calls[0][1] as RequestInit).method).toBe('POST')
     expect(fetchMock.mock.calls[1]?.[0]).toContain('/api/tasks/task-1/status')
     expect(JSON.parse((fetchMock.mock.calls[1][1] as RequestInit).body as string)).toEqual({ status: 'Done' })
+  })
+
+  it('sends all six task detail fields through PUT before status and assignee patches', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({
+        title: 'Old', description: 'Old description', priority: 'Low',
+        dueDate: null, estimatedHours: 12, progressPercent: 45,
+        status: 'Todo', assigneeId: 'user-1',
+      }))
+      .mockResolvedValue(jsonResponse(undefined, 204))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const details = {
+      title: 'Updated title', description: 'Updated description', priority: 'High' as const,
+      dueDate: '2026-12-01T00:00:00Z', estimatedHours: 8, progressPercent: 60,
+    }
+    await updateTask('task-1', { ...details, status: 'InProgress', assigneeId: 'user-2' })
+
+    expect(fetchMock).toHaveBeenCalledTimes(4)
+    expect(fetchMock.mock.calls.map(([url, request]) => [url, request.method])).toEqual([
+      [expect.stringMatching(/\/api\/tasks\/task-1$/), undefined],
+      [expect.stringMatching(/\/api\/tasks\/task-1$/), 'PUT'],
+      [expect.stringMatching(/\/api\/tasks\/task-1\/status$/), 'PATCH'],
+      [expect.stringMatching(/\/api\/tasks\/task-1\/assignee$/), 'PATCH'],
+    ])
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual(details)
+    expect(JSON.parse(fetchMock.mock.calls[2][1].body)).toEqual({ status: 'InProgress' })
+    expect(JSON.parse(fetchMock.mock.calls[3][1].body)).toEqual({ assigneeId: 'user-2' })
   })
 
   it('returns no risk when the AI endpoint is unavailable', async () => {

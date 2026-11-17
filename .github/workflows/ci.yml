@@ -138,6 +138,9 @@ jobs:
       - name: Lint web
         run: npm run lint --prefix web
 
+      - name: Test web API contracts
+        run: npm test --prefix web
+
       - name: Build web
         run: npm run build --prefix web
 
