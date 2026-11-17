@@ -13,7 +13,7 @@ public sealed class TaskEventPublishingTests
     [InlineData("assign")]
     [InlineData("reassign")]
     [InlineData("unassign")]
-    public async Task Assignment_publishes_correct_payload_after_save(string change)
+    public async Task Assignment_enqueues_correct_payload_before_save_and_publishes_after(string change)
     {
         using var f = new TaskEventFixture(assigned: change != "assign");
         var previous = f.Task.AssigneeId;
@@ -35,7 +35,7 @@ public sealed class TaskEventPublishingTests
         Assert.Equal(next, e.AssigneeId);
         Assert.Equal(f.ActorId, e.ChangedBy);
         Assert.Equal(next, result.Value!.AssigneeId);
-        Assert.Equal(new[] { "save", "publish" }, f.UnitOfWork.Operations);
+        Assert.Equal(new[] { "enqueue", "save", "publish" }, f.UnitOfWork.Operations);
     }
 
     [Theory]
@@ -45,7 +45,7 @@ public sealed class TaskEventPublishingTests
     [InlineData(ProjectTaskStatus.InProgress, ProjectTaskStatus.Done)]
     [InlineData(ProjectTaskStatus.Done, ProjectTaskStatus.Todo)]
     [InlineData(ProjectTaskStatus.Done, ProjectTaskStatus.InProgress)]
-    public async Task Status_change_publishes_old_and_new_contract_status_after_save(
+    public async Task Status_change_enqueues_old_and_new_contract_status_before_save_and_publishes_after(
         ProjectTaskStatus oldStatus, ProjectTaskStatus newStatus)
     {
         using var f = new TaskEventFixture();
@@ -68,7 +68,7 @@ public sealed class TaskEventPublishingTests
         Assert.Equal(f.CreatorId, e.CreatedBy);
         Assert.Equal(f.ActorId, e.ChangedBy);
         Assert.Equal(newStatus.ToString(), result.Value!.Status);
-        Assert.Equal(new[] { "save", "publish" }, f.UnitOfWork.Operations);
+        Assert.Equal(new[] { "enqueue", "save", "publish" }, f.UnitOfWork.Operations);
     }
 
     [Theory]
@@ -107,7 +107,7 @@ public sealed class TaskEventPublishingTests
     }
 
     [Fact]
-    public async Task Creating_assigned_task_publishes_initial_assignment_after_save()
+    public async Task Creating_assigned_task_enqueues_initial_assignment_before_save_and_publishes_after()
     {
         using var f = new TaskEventFixture();
         var result = await f.CreateAsync(f.MemberId);
@@ -121,7 +121,7 @@ public sealed class TaskEventPublishingTests
         Assert.Equal(f.ActorId, e.ChangedBy);
         Assert.NotEqual(Guid.Empty, e.EventId);
         Assert.Equal(DateTimeKind.Utc, e.OccurredAtUtc.Kind);
-        Assert.Equal(new[] { "save", "publish" }, f.UnitOfWork.Operations);
+        Assert.Equal(new[] { "enqueue", "save", "publish" }, f.UnitOfWork.Operations);
     }
 
     [Fact]

@@ -1,5 +1,4 @@
 using Application.Abstractions.CQRS;
-using EventBus;
 using FluentValidation;
 using Identity.Contracts;
 using Projects.Contracts;
@@ -16,7 +15,7 @@ public sealed class CreateTaskCommandHandler(
     IIdentityModuleApi identity,
     ITaskRepository tasks,
     ITaskManagementUnitOfWork unitOfWork,
-    IIntegrationEventBus eventBus)
+    IIntegrationEventOutbox outbox)
     : ICommandHandler<CreateTaskCommand, Result<TaskDto>>
 {
     public async Task<Result<TaskDto>> Handle(CreateTaskCommand request, CancellationToken cancellationToken)
@@ -45,14 +44,17 @@ public sealed class CreateTaskCommandHandler(
 
         var task = created.Value!;
         tasks.Add(task);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // Ghi sự kiện vào outbox TRƯỚC khi lưu để nó nằm chung transaction với task; gửi tức thì sau khi lưu xong.
         if (task.AssigneeId is not null)
         {
-            await eventBus.PublishAsync(new TaskAssignedIntegrationEvent(
+            outbox.Enqueue(new TaskAssignedIntegrationEvent(
                 Guid.NewGuid(), DateTime.UtcNow, task.Id, task.ProjectId, task.Title,
-                task.AssigneeId, null, request.ActorId), cancellationToken);
+                task.AssigneeId, null, request.ActorId));
         }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await outbox.DispatchAsync(cancellationToken);
 
         var assigneeName = await TaskDtoMapper.GetDisplayNameAsync(identity, task.AssigneeId, cancellationToken);
         return Result<TaskDto>.Success(TaskDtoMapper.ToDto(task, assigneeName));

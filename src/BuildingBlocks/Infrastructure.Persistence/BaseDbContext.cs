@@ -13,10 +13,9 @@ public abstract class BaseDbContext : DbContext
             .Where(e => e.Entity.DomainEvents.Count > 0)
             .ToList();
 
-        // TODO Week 3: Outbox pattern - serialize DomainEvents into outbox_messages
-        // within the same transaction before base.SaveChangesAsync.
-        // Steps: collect events -> insert OutboxMessage rows -> base.SaveChanges -> clear.
-        // This ensures TaskStatusChangedDomainEvent is never lost if Notifications/RiskAI is down.
+        // Outbox: module cần sự kiện bền vững tự ghi OutboxMessage (xem Outbox/OutboxMessage.cs và
+        // TaskManagement.Infrastructure.EfIntegrationEventOutbox) để dòng outbox nằm chung transaction với
+        // lần SaveChanges này. Domain event ở đây vẫn chỉ được xóa sau khi lưu, chưa được chuyển thành outbox.
 
         var result = await base.SaveChangesAsync(cancellationToken);
 
