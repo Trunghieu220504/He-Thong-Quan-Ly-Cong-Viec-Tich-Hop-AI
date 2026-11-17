@@ -21,12 +21,22 @@ export async function getNotifications(): Promise<NotificationsResponse> {
   }
 
   const [data, unread] = await Promise.all([
-    apiClient<{ items: NotificationDto[] } | NotificationDto[]>('/api/notifications'),
+    apiClient<{ items: NotificationDto[]; page: number; pageSize: number; totalCount: number } | NotificationDto[]>('/api/notifications?page=1&pageSize=100'),
     apiClient<{ count: number }>('/api/notifications/unread-count'),
   ])
-  const items = Array.isArray(data) ? data : data.items
+  const items = [...(Array.isArray(data) ? data : data.items)]
+  if (!Array.isArray(data)) {
+    const pageSize = data.pageSize || 100
+    const pages = Math.ceil(data.totalCount / pageSize)
+    for (let page = 2; page <= pages; page++) {
+      const next = await apiClient<{ items: NotificationDto[] }>(
+        `/api/notifications?page=${page}&pageSize=${pageSize}`,
+      )
+      items.push(...next.items)
+    }
+  }
 
-  return { items: items.map(toNotificationItem), unreadCount: unread.count }
+  return { items: [...new Map(items.map((item) => [item.id, item])).values()].map(toNotificationItem), unreadCount: unread.count }
 }
 
 export async function markNotificationAsRead(id: string): Promise<void> {
@@ -50,4 +60,3 @@ export async function markAllNotificationsAsRead(): Promise<void> {
 export function pushMockNotification(item: Omit<NotificationItem, 'id' | 'createdAt' | 'isRead'>): NotificationItem {
   return mockService.addNotification(item)
 }
-

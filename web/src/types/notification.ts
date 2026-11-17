@@ -17,4 +17,3 @@ export interface NotificationsResponse {
   items: NotificationItem[]
   unreadCount: number
 }
-

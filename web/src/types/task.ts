@@ -15,6 +15,8 @@ export interface TaskItem {
   assigneeName?: string
   dueDate?: string
   createdAt: string
+  estimatedHours?: number | null
+  progressPercent?: number
   updatedAt?: string
 }
 

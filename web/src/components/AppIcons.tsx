@@ -359,5 +359,3 @@ export function RobotIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
-
-

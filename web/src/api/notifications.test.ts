@@ -27,7 +27,7 @@ describe('Notifications API contract', () => {
         items: [notification, { ...notification, id: 'status-notification', type: 'TaskStatusChanged' }],
         page: 1,
         pageSize: 20,
-        totalCount: 40,
+        totalCount: 2,
       }))
       .mockResolvedValueOnce(Response.json({ count: 25 }))
     vi.stubGlobal('fetch', fetchMock)
@@ -40,7 +40,7 @@ describe('Notifications API contract', () => {
       unreadCount: 25,
     })
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
-      `${API_BASE_URL}/api/notifications`,
+      `${API_BASE_URL}/api/notifications?page=1&pageSize=100`,
       `${API_BASE_URL}/api/notifications/unread-count`,
     ])
   })
@@ -92,4 +92,19 @@ describe('Notifications API contract', () => {
 
     await expect(markNotificationAsRead(notification.id)).rejects.toMatchObject({ status: 404 })
   })
+})
+
+it('loads notifications beyond the first page', async () => {
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(Response.json({ items: [notification], page: 1, pageSize: 1, totalCount: 2 }))
+    .mockResolvedValueOnce(Response.json({ count: 2 }))
+    .mockResolvedValueOnce(Response.json({ items: [{ ...notification, id: 'second' }] }))
+  vi.stubGlobal('fetch', fetchMock)
+  try {
+    const result = await getNotifications()
+    expect(result.items.map(item => item.id)).toEqual([notification.id, 'second'])
+    expect(fetchMock.mock.calls[2][0]).toBe(API_BASE_URL + '/api/notifications?page=2&pageSize=1')
+  } finally {
+    vi.unstubAllGlobals()
+  }
 })
