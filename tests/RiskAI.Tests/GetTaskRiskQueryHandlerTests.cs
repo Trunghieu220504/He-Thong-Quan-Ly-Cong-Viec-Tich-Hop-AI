@@ -24,9 +24,9 @@ public class GetTaskRiskQueryHandlerTests
     private TaskSummary AddTask(
         ProjectTaskStatus status = ProjectTaskStatus.InProgress,
         DateTime? dueDate = null,
-        bool userIsMember = true)
+        bool userIsMember = true, int progress = 37, double? hours = 12.5)
     {
-        var task = new TaskSummary(Guid.NewGuid(), _projectId, status, dueDate, AssigneeId: null);
+        var task = new TaskSummary(Guid.NewGuid(), _projectId, status, dueDate, AssigneeId: null, EstimatedHours: hours, ProgressPercent: progress);
         _tasks.Tasks[task.Id] = task;
         if (userIsMember)
             _projects.Roles[(_projectId, _userId)] = "Member";
@@ -69,7 +69,7 @@ public class GetTaskRiskQueryHandlerTests
         Assert.True(result.IsSuccess);
         Assert.Equal(new TaskRiskDto(task.Id, "medium", "ai-service"), result.Value);
         var sent = Assert.Single(_ai.Calls);
-        Assert.Equal(new RiskAiRequest(task.Id, EstimatedHours: null, DaysUntilDue: 3, ProgressPercent: 50), sent);
+        Assert.Equal(new RiskAiRequest(task.Id, EstimatedHours: 12.5, DaysUntilDue: 3, ProgressPercent: 37), sent);
     }
 
     [Theory]
@@ -98,12 +98,12 @@ public class GetTaskRiskQueryHandlerTests
     }
 
     [Theory]
-    [InlineData(ProjectTaskStatus.Todo, 0d)]
-    [InlineData(ProjectTaskStatus.InProgress, 50d)]
-    [InlineData(ProjectTaskStatus.Done, 100d)]
-    public async Task Progress_percent_suy_tu_trang_thai(ProjectTaskStatus status, double expectedProgress)
+    [InlineData(ProjectTaskStatus.Todo, 23)]
+    [InlineData(ProjectTaskStatus.InProgress, 67)]
+    [InlineData(ProjectTaskStatus.Done, 100)]
+    public async Task Progress_percent_lay_tu_TaskSummary(ProjectTaskStatus status, int expectedProgress)
     {
-        var task = AddTask(status);
+        var task = AddTask(status, progress: expectedProgress);
 
         await Send(task.Id);
 

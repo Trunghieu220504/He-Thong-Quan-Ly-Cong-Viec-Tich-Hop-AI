@@ -21,7 +21,14 @@ public sealed class SmtpNotificationEmailSender(
     {
         try
         {
-            var recipient = await identityApi.GetUserSummaryAsync(recipientUserId, ct);
+            if (!int.TryParse(configuration["Smtp:TimeoutSeconds"] ?? "5", out var timeoutSeconds)
+                || timeoutSeconds <= 0)
+                throw new InvalidOperationException("Smtp:TimeoutSeconds must be positive.");
+
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeout.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+
+            var recipient = await identityApi.GetUserSummaryAsync(recipientUserId, timeout.Token);
             if (recipient is null || string.IsNullOrWhiteSpace(recipient.Email))
                 return;
 
@@ -41,7 +48,7 @@ public sealed class SmtpNotificationEmailSender(
                 Body = $"Xin chào {recipient.DisplayName},\n\n{assignedByDisplayName} đã giao công việc \"{taskTitle}\" cho bạn."
             };
 
-            await client.SendMailAsync(message, ct);
+            await client.SendMailAsync(message, timeout.Token);
         }
         catch (Exception ex)
         {

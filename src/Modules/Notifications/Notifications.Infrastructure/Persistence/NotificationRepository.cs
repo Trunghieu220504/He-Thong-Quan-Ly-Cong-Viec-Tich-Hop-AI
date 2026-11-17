@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using Notifications.Application.Abstractions;
 using Notifications.Contracts;
 using Notifications.Domain.Entities;
@@ -26,7 +27,11 @@ public sealed class NotificationRepository(
             await dbContext.SaveChangesAsync(ct);
             return true;
         }
-        catch (DbUpdateException ex)
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+        {
+            SqlState: PostgresErrorCodes.UniqueViolation,
+            ConstraintName: "IX_Notifications_EventId_UserId"
+        })
         {
             logger.LogWarning(
                 ex,

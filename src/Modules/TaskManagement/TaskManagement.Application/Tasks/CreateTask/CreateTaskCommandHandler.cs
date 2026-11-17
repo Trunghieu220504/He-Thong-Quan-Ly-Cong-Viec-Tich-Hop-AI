@@ -39,7 +39,7 @@ public sealed class CreateTaskCommandHandler(
         TaskParsing.TryParsePriority(request.Priority, out var priority);
         var created = ProjectTask.Create(
             request.ProjectId, request.Title, request.Description, priority,
-            request.AssigneeId, request.DueDate, request.ActorId);
+            request.AssigneeId, request.DueDate, request.ActorId, request.EstimatedHours, request.ProgressPercent);
         if (created.IsFailure)
             return Result<TaskDto>.ValidationFailure(created.Error!);
 

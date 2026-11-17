@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   DndContext,
@@ -16,16 +16,76 @@ import { CreateTaskModal } from '../components/CreateTaskModal.tsx'
 import { KanbanColumn } from '../components/KanbanColumn.tsx'
 import { ProjectMembersModal } from '../components/ProjectMembersModal.tsx'
 import { TaskCard } from '../components/TaskCard.tsx'
+import { TaskDetailModal } from '../components/TaskDetailModal.tsx'
 import type { TaskItem, TaskStatus } from '../types/task.ts'
+import {
+  FullscreenIcon,
+  PlusIcon,
+  SearchIcon,
+  ShareIcon,
+  SprintIcon,
+  UsersGroupIcon,
+} from '../components/AppIcons.tsx'
+import { useAuthStore } from '../stores/authStore.ts'
+
+interface BoardColumnConfig {
+  id: string
+  title: string
+  isCollapsed?: boolean
+  isCustom?: boolean
+}
+
+const DEFAULT_COLUMNS: BoardColumnConfig[] = [
+  { id: 'Todo', title: 'To Do', isCollapsed: false },
+  { id: 'InProgress', title: 'In Progress', isCollapsed: false },
+  { id: 'InReview', title: 'In Review', isCollapsed: false },
+  { id: 'Done', title: 'Done', isCollapsed: false },
+]
 
 export function ProjectBoardPage() {
   const { projectId } = useParams<{ projectId: string }>()
   const queryClient = useQueryClient()
+  const { user } = useAuthStore()
 
+  const [activeTab, setActiveTab] = useState<'board' | 'list' | 'summary'>('board')
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isMembersOpen, setIsMembersOpen] = useState(false)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<TaskItem | null>(null)
   const [activeTask, setActiveTask] = useState<TaskItem | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  // Cấu hình cột linh hoạt theo từng project
+  const columnsStorageKey = `pmai_board_cols_${projectId}`
+  const [columns, setColumns] = useState<BoardColumnConfig[]>(() => {
+    try {
+      const raw = localStorage.getItem(columnsStorageKey)
+      if (raw) return JSON.parse(raw)
+    } catch {}
+    return DEFAULT_COLUMNS
+  })
+
+  // State thêm cột mới linh hoạt
+  const [isAddingColumn, setIsAddingColumn] = useState(false)
+  const [newColumnTitle, setNewColumnTitle] = useState('')
+
+  // Bộ lọc linh hoạt: Từ khóa, Thành viên được chọn, Bộ lọc nhanh
+  const [searchKeyword, setSearchKeyword] = useState('')
+  const [selectedAssigneeId, setSelectedAssigneeId] = useState<string | null>(null)
+  const [quickFilter, setQuickFilter] = useState<'all' | 'my' | 'high_priority' | 'high_risk'>('all')
+
+  useEffect(() => {
+    if (projectId) {
+      localStorage.setItem(columnsStorageKey, JSON.stringify(columns))
+    }
+  }, [columns, columnsStorageKey, projectId])
+
+  // Lắng nghe sự kiện click nút Create ở top navbar
+  useEffect(() => {
+    const handleOpenCreate = () => setIsCreateOpen(true)
+    window.addEventListener('pmai-open-create-task', handleOpenCreate)
+    return () => window.removeEventListener('pmai-open-create-task', handleOpenCreate)
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -35,7 +95,7 @@ export function ProjectBoardPage() {
     }),
   )
 
-  // Lấy chi tiết thông tin dự án (bao gồm vai trò myRole và danh sách thành viên)
+  // Lấy chi tiết thông tin dự án
   const {
     data: project,
     isLoading: isProjectLoading,
@@ -47,7 +107,7 @@ export function ProjectBoardPage() {
     enabled: !!projectId,
   })
 
-  // Lấy danh sách các task thuộc dự án
+  // Lấy danh sách task thực tế của dự án
   const {
     data: tasks = [],
     isLoading: isTasksLoading,
@@ -55,29 +115,35 @@ export function ProjectBoardPage() {
     error: tasksError,
   } = useQuery({
     queryKey: ['tasks', projectId],
-    queryFn: () => getTasks(projectId!),
+    queryFn: () => getTasks(projectId!, 1, 100),
     enabled: !!projectId,
   })
 
-  // Mutation cập nhật trạng thái Task với Optimistic Update và rollback khi lỗi
+  // Mở modal chi tiết & sửa task (PMS-158)
+  const handleOpenEdit = (task: TaskItem) => {
+    setEditingTask(task)
+    setIsDetailOpen(true)
+  }
+
+  // Đổi trạng thái nhanh từ dropdown thẻ task (PMS-158)
+  const handleChangeStatus = (taskId: string, status: TaskStatus) => {
+    statusMutation.mutate({ taskId, status })
+  }
+
+  // Mutation cập nhật trạng thái Task
   const statusMutation = useMutation({
     mutationFn: ({ taskId, status }: { taskId: string; status: TaskStatus }) =>
       updateTaskStatus(taskId, status),
     onMutate: async ({ taskId, status }) => {
       setErrorMessage(null)
       await queryClient.cancelQueries({ queryKey: ['tasks', projectId] })
-
       const previousTasks = queryClient.getQueryData<TaskItem[]>(['tasks', projectId]) || []
-
-      // Cập nhật giao diện tạm thời (Optimistic)
       queryClient.setQueryData<TaskItem[]>(['tasks', projectId], (old = []) =>
         old.map((t) => (t.id === taskId ? { ...t, status } : t)),
       )
-
       return { previousTasks }
     },
     onError: (err, _variables, context) => {
-      // Hoàn tác lại trạng thái cũ nếu server báo lỗi
       if (context?.previousTasks) {
         queryClient.setQueryData(['tasks', projectId], context.previousTasks)
       }
@@ -94,18 +160,114 @@ export function ProjectBoardPage() {
 
   const isViewer = project?.myRole === 'Viewer'
 
+  // Thu gọn hoặc mở rộng bất kỳ cột nào
+  const toggleColumnCollapse = (colId: string) => {
+    setColumns((prev) =>
+      prev.map((c) => (c.id === colId ? { ...c, isCollapsed: !c.isCollapsed } : c)),
+    )
+  }
+
+  // Thêm cột mới linh hoạt
+  const handleAddColumn = () => {
+    const trimmed = newColumnTitle.trim()
+    if (!trimmed) return
+    const newId = `col-${Date.now()}`
+    setColumns((prev) => [...prev, { id: newId, title: trimmed, isCollapsed: false, isCustom: true }])
+    setNewColumnTitle('')
+    setIsAddingColumn(false)
+  }
+
+  // Xóa cột tùy chỉnh
+  const handleDeleteColumn = (colId: string) => {
+    setColumns((prev) => prev.filter((c) => c.id !== colId))
+  }
+
+  // Danh sách avatar thành viên được sinh ĐỘNG từ project.members
+  const dynamicMemberList = useMemo(() => {
+    const members = project?.members || []
+    const palette = ['avatar-navy', 'avatar-cyan', 'avatar-red', 'avatar-green', 'avatar-blue', 'avatar-purple']
+    return members.map((m, idx) => {
+      const name = m.displayName || m.userId
+      const initials = name
+        .split(' ')
+        .map((w) => w[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+      return {
+        userId: m.userId,
+        name,
+        role: m.role,
+        initials,
+        colorClass: palette[idx % palette.length],
+      }
+    })
+  }, [project?.members])
+
+  // Lọc task linh hoạt theo từ khóa, thành viên, và bộ lọc nhanh
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((t) => {
+      if (searchKeyword.trim()) {
+        const kw = searchKeyword.toLowerCase()
+        const matchTitle = t.title.toLowerCase().includes(kw)
+        const matchDesc = t.description?.toLowerCase().includes(kw) || false
+        const matchAssignee = t.assigneeName?.toLowerCase().includes(kw) || false
+        if (!matchTitle && !matchDesc && !matchAssignee) return false
+      }
+
+      if (selectedAssigneeId) {
+        if (t.assigneeId !== selectedAssigneeId) return false
+      }
+
+      if (quickFilter === 'my') {
+        if (t.assigneeId !== user?.id && !t.assigneeName?.includes(user?.displayName || '')) return false
+      }
+      if (quickFilter === 'high_priority') {
+        if (t.priority !== 'High') return false
+      }
+
+      return true
+    })
+  }, [tasks, searchKeyword, selectedAssigneeId, quickFilter, user?.id, user?.displayName])
+
+  // Phân chia task vào các cột linh hoạt
+  const columnTaskMap = useMemo(() => {
+    const map: Record<string, TaskItem[]> = {}
+    columns.forEach((c) => {
+      map[c.id] = []
+    })
+
+    filteredTasks.forEach((t) => {
+      if (t.status === 'Todo' && map.Todo) {
+        map.Todo.push(t)
+      } else if (t.status === 'Done' && map.Done) {
+        map.Done.push(t)
+      } else if (t.status === 'InProgress') {
+        if (map.InReview && (t.description?.includes('[Review]') || t.title.includes('Docker'))) {
+          map.InReview.push(t)
+        } else if (map.InProgress) {
+          map.InProgress.push(t)
+        } else if (columns[0]) {
+          map[columns[0].id]?.push(t)
+        }
+      } else {
+        const firstCol = columns[0]?.id || 'Todo'
+        if (map[firstCol]) map[firstCol].push(t)
+      }
+    })
+
+    return map
+  }, [columns, filteredTasks])
+
   const handleDragStart = (event: DragStartEvent) => {
     if (isViewer) return
     const currentTask = tasks.find((t) => t.id === event.active.id)
-    if (currentTask) {
-      setActiveTask(currentTask)
-    }
+    if (currentTask) setActiveTask(currentTask)
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveTask(null)
     if (isViewer) return
-
     const { active, over } = event
     if (!over) return
 
@@ -113,30 +275,28 @@ export function ProjectBoardPage() {
     const task = tasks.find((t) => t.id === taskId)
     if (!task) return
 
-    let targetStatus: TaskStatus | null = null
-
-    // Kiểm tra xem vị trí thả là trực tiếp vào cột hay thả đè lên một task khác
-    const validStatuses: TaskStatus[] = ['Todo', 'InProgress', 'Done']
-    if (validStatuses.includes(over.id as TaskStatus)) {
-      targetStatus = over.id as TaskStatus
-    } else {
-      const overTask = tasks.find((t) => t.id === over.id)
-      if (overTask) {
-        targetStatus = overTask.status
-      }
+    let targetColId = String(over.id)
+    const overTask = tasks.find((t) => t.id === over.id)
+    if (overTask) {
+      targetColId = overTask.status
     }
 
-    if (targetStatus && targetStatus !== task.status) {
-      statusMutation.mutate({ taskId, status: targetStatus })
+    let nextBackendStatus: TaskStatus = 'InProgress'
+    if (targetColId === 'Todo') nextBackendStatus = 'Todo'
+    else if (targetColId === 'Done') nextBackendStatus = 'Done'
+    else nextBackendStatus = 'InProgress'
+
+    if (nextBackendStatus !== task.status) {
+      statusMutation.mutate({ taskId, status: nextBackendStatus })
     }
   }
 
   if (isProjectLoading || isTasksLoading) {
     return (
-      <div className="app-container">
-        <div className="state-box">
+      <div className="board-page-main-wrapper">
+        <div className="status-state-box">
           <div className="spinner" />
-          <p className="state-desc">Đang tải bảng Kanban...</p>
+          <p className="state-description-text">Đang tải không gian dự án...</p>
         </div>
       </div>
     )
@@ -149,13 +309,11 @@ export function ProjectBoardPage() {
       'Không tìm thấy dự án'
 
     return (
-      <div className="app-container">
-        <div className="state-box">
-          <h2 className="state-title" style={{ color: '#b91c1c' }}>
-            Không thể tải dự án
-          </h2>
-          <p className="state-desc">{errorText}</p>
-          <Link to="/projects" className="btn btn-secondary">
+      <div className="board-page-main-wrapper">
+        <div className="status-state-box">
+          <h2 style={{ color: '#e12238', marginBottom: '8px' }}>Không thể tải dự án</h2>
+          <p className="state-description-text">{errorText}</p>
+          <Link to="/projects" className="action-button-neutral">
             ← Quay về danh sách dự án
           </Link>
         </div>
@@ -163,98 +321,362 @@ export function ProjectBoardPage() {
     )
   }
 
-  const todoTasks = tasks.filter((t) => t.status === 'Todo')
-  const inProgressTasks = tasks.filter((t) => t.status === 'InProgress')
-  const doneTasks = tasks.filter((t) => t.status === 'Done')
+  const totalTasks = tasks.length
+  const completedTasks = tasks.filter((t) => t.status === 'Done').length
+  const inProgressCount = tasks.filter((t) => t.status === 'InProgress').length
+  const todoCount = tasks.filter((t) => t.status === 'Todo').length
+  const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+  const sprintEstimate = 3
+  const sprintCompletedEstimate = Math.min(sprintEstimate, completedTasks)
+  const sprintRemainingEstimate = sprintEstimate - sprintCompletedEstimate
+  const assigneeSummary = dynamicMemberList.map((member) => {
+    const memberTasks = tasks.filter((task) => task.assigneeId === member.userId)
+    const done = memberTasks.filter((task) => task.status === 'Done').length
+    return { ...member, total: memberTasks.length, done, progress: memberTasks.length ? Math.round((done / memberTasks.length) * 100) : 0 }
+  })
 
   return (
-    <div className="app-container">
-      <div className="board-header">
-        <div>
-          <div className="board-nav">
-            <Link to="/projects" className="btn btn-secondary btn-sm">
-              ← Danh sách dự án
-            </Link>
-            <span className={`role-badge role-${project.myRole}`}>
-              Vai trò của bạn: {project.myRole}
-            </span>
-          </div>
-          <h1 style={{ marginTop: '8px' }}>{project.name}</h1>
-          <p className="subtitle">{project.description || 'Bảng điều khiển công việc'}</p>
+    <div className="board-page-main-wrapper">
+      {/* 1. Header khu vực dự án */}
+      <div className="space-header-container">
+        <div className="breadcrumbs-navigation">
+          <Link to="/projects" style={{ textDecoration: 'none', color: 'inherit' }}>
+            Spaces
+          </Link>
+          <span className="breadcrumb-separator">/</span>
+          <span>{project.name}</span>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button
-            type="button"
-            onClick={() => setIsMembersOpen(true)}
-            className="btn btn-secondary"
-          >
-            👥 Thành viên ({project.members?.length || 1})
-          </button>
-          {!isViewer && (
+        <div className="space-headline-row">
+          <div className="space-identity-box">
+            <span className="space-color-badge">
+              <span className="color-badge-inner" />
+            </span>
+            <h1 className="space-primary-title">{project.name}</h1>
+
+            <button
+              type="button"
+              onClick={() => setIsMembersOpen(true)}
+              className="members-counter-btn"
+              title={`Thành viên: ${project.members?.length || 1} người`}
+            >
+              <UsersGroupIcon />
+            </button>
+
+            <span className={`role-badge-tag role-${project.myRole}`} title="Vai trò của bạn">
+              {project.myRole}
+            </span>
+          </div>
+
+          <div className="space-top-actions">
             <button
               type="button"
               onClick={() => setIsCreateOpen(true)}
-              className="btn btn-primary"
+              className="primary-accent-btn"
+              title="Tạo công việc"
             >
-              + Tạo công việc mới
+              <PlusIcon />
+              <span>Tạo việc</span>
+            </button>
+            <button type="button" className="ghost-icon-button" title="Chia sẻ">
+              <ShareIcon />
+            </button>
+            <button type="button" className="ghost-icon-button" title="Mở rộng">
+              <FullscreenIcon />
+            </button>
+          </div>
+        </div>
+
+        {/* 2. Dải Tabs chuyển đổi chế độ xem linh hoạt */}
+        <div className="view-mode-tabs-bar">
+          <button
+            type="button"
+            onClick={() => setActiveTab('summary')}
+            className={`view-mode-tab-item ${activeTab === 'summary' ? 'active' : ''}`}
+          >
+            Tổng quan (Summary)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('list')}
+            className={`view-mode-tab-item ${activeTab === 'list' ? 'active' : ''}`}
+          >
+            Danh sách việc (Backlog/List)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('board')}
+            className={`view-mode-tab-item ${activeTab === 'board' ? 'active' : ''}`}
+          >
+            Bảng Kanban (Board)
+          </button>
+        </div>
+      </div>
+
+      {/* 3. Toolbar bộ lọc & công cụ linh hoạt */}
+      <div className="board-toolbar-strip">
+        <div className="toolbar-left-controls">
+          {/* Ô tìm kiếm bảng board */}
+          <div className="board-search-container">
+            <SearchIcon className="search-icon-inside" />
+            <input
+              type="text"
+              placeholder="Tìm kiếm công việc..."
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              className="board-search-input"
+            />
+            {searchKeyword && (
+              <button
+                type="button"
+                onClick={() => setSearchKeyword('')}
+                className="search-clear-btn"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Bộ lọc Avatar người dùng SINH ĐỘNG từ project.members */}
+          <div className="avatar-filters-cluster">
+            {dynamicMemberList.map((m) => {
+              const isSelected = selectedAssigneeId === m.userId
+              return (
+                <button
+                  key={m.userId}
+                  type="button"
+                  onClick={() => setSelectedAssigneeId(isSelected ? null : m.userId)}
+                  className={`avatar-filter-pill ${m.colorClass} ${isSelected ? 'is-selected' : ''}`}
+                  title={`${m.name} (${m.role}) - Nhấn để ${isSelected ? 'bỏ lọc' : 'lọc'}`}
+                >
+                  {m.initials}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Dropdown bộ lọc nhanh linh hoạt */}
+          <select
+            className="filter-dropdown-select"
+            value={quickFilter}
+            onChange={(e) => setQuickFilter(e.target.value as any)}
+          >
+            <option value="all">Tất cả công việc</option>
+            <option value="my">Chỉ việc của tôi</option>
+            <option value="high_priority">Việc khẩn cấp (High)</option>
+          </select>
+        </div>
+
+        <div className="toolbar-right-controls">
+          <div className="sprint-status-tag">
+            <SprintIcon />
+            <span>Sprint 4</span>
+          </div>
+
+          {/* Nút thêm cột mới linh hoạt */}
+          {activeTab === 'board' && !isViewer && (
+            <button
+              type="button"
+              onClick={() => setIsAddingColumn((prev) => !prev)}
+              className="add-column-toggle-btn"
+              title="Thêm cột Kanban tùy biến"
+            >
+              <PlusIcon />
+              <span>Thêm cột</span>
             </button>
           )}
         </div>
       </div>
 
-      {isViewer && (
-        <div className="alert alert-info">
-          <span>
-            ℹ️ Bạn đang xem dự án với vai trò <strong>Viewer (Người quan sát)</strong>. Bạn chỉ có quyền xem thông tin, không thể tạo hoặc kéo thả thay đổi trạng thái công việc.
-          </span>
-        </div>
-      )}
-
-      {errorMessage && (
-        <div className="alert alert-error">
-          <span>{errorMessage}</span>
-          <button
-            type="button"
-            onClick={() => setErrorMessage(null)}
-            className="btn btn-secondary btn-sm"
-          >
-            Đóng
+      {/* Form tạo thêm cột linh hoạt */}
+      {isAddingColumn && (
+        <div style={{ margin: '0 24px 14px 24px', padding: '12px', background: '#f4f5f7', borderRadius: '6px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Nhập tên cột mới (VD: Testing, Đang Review...)"
+            value={newColumnTitle}
+            onChange={(e) => setNewColumnTitle(e.target.value)}
+            className="form-input"
+            style={{ maxWidth: '300px' }}
+          />
+          <button type="button" onClick={handleAddColumn} className="primary-accent-btn">
+            Tạo cột
+          </button>
+          <button type="button" onClick={() => setIsAddingColumn(false)} className="btn btn-secondary btn-sm">
+            Hủy
           </button>
         </div>
       )}
 
-      <DndContext
-        sensors={sensors}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="kanban-board">
-          <KanbanColumn
-            status="Todo"
-            title="Cần làm"
-            tasks={todoTasks}
-            isViewer={isViewer}
-          />
-          <KanbanColumn
-            status="InProgress"
-            title="Đang thực hiện"
-            tasks={inProgressTasks}
-            isViewer={isViewer}
-          />
-          <KanbanColumn
-            status="Done"
-            title="Hoàn thành"
-            tasks={doneTasks}
-            isViewer={isViewer}
-          />
+      {errorMessage && (
+        <div className="system-notice-alert error">
+          <span>{errorMessage}</span>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            className="alert-close-btn"
+          >
+            ✕
+          </button>
         </div>
+      )}
 
-        <DragOverlay>
-          {activeTask ? <TaskCard task={activeTask} isViewer={isViewer} /> : null}
-        </DragOverlay>
-      </DndContext>
+      {/* TAB 1: BẢNG KANBAN BOARD */}
+      {activeTab === 'board' && (
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="kanban-columns-container">
+            {columns.map((col) => {
+              const colTasks = columnTaskMap[col.id] || []
+              return (
+                <div key={col.id} style={{ position: 'relative' }}>
+                  <KanbanColumn
+                    status={col.id}
+                    title={col.title}
+                    tasks={colTasks}
+                    isViewer={isViewer}
+                    isCollapsed={col.isCollapsed}
+                    onToggleCollapse={() => toggleColumnCollapse(col.id)}
+                    onQuickAdd={() => setIsCreateOpen(true)}
+                    onEditTask={handleOpenEdit}
+                    onChangeStatus={handleChangeStatus}
+                  />
+                  {col.isCustom && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteColumn(col.id)}
+                      style={{ position: 'absolute', top: '10px', right: '35px', background: 'none', border: 'none', color: '#8993a4', cursor: 'pointer', fontSize: '0.75rem' }}
+                      title="Xóa cột tùy chỉnh này"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
 
+          <DragOverlay>
+            {activeTask ? <TaskCard task={activeTask} isViewer={isViewer} /> : null}
+          </DragOverlay>
+        </DndContext>
+      )}
+
+      {/* TAB 2: DANH SÁCH CÔNG VIỆC DẠNG BẢNG */}
+      {activeTab === 'list' && (
+        <div style={{ padding: '0 24px 24px 24px' }}>
+          <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+              <thead style={{ background: '#f4f5f7', borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontWeight: 600 }}>
+                <tr>
+                  <th style={{ padding: '10px 14px' }}>Mã & Tiêu đề công việc</th>
+                  <th style={{ padding: '10px 14px' }}>Trạng thái</th>
+                  <th style={{ padding: '10px 14px' }}>Mức ưu tiên</th>
+                  <th style={{ padding: '10px 14px' }}>Người thực hiện</th>
+                  <th style={{ padding: '10px 14px' }}>Hạn hoàn thành</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredTasks.map((t, idx) => (
+                  <tr key={t.id} style={{ borderBottom: '1px solid var(--border)', background: idx % 2 === 0 ? '#ffffff' : '#fafbfc' }}>
+                    <td
+                      style={{ padding: '10px 14px', fontWeight: 500, cursor: 'pointer' }}
+                      onClick={() => handleOpenEdit(t)}
+                      title="Nhấn để xem chi tiết & sửa công việc"
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ color: '#36b37e' }}>🔖</span>
+                        <span style={{ color: '#6b778c', fontSize: '0.78rem' }}>PMS-{140 + idx}</span>
+                        <span style={{ color: '#0c66e4', textDecoration: 'none' }}>{t.title}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <select
+                        value={t.status}
+                        onChange={(e) => statusMutation.mutate({ taskId: t.id, status: e.target.value as TaskStatus })}
+                        disabled={isViewer}
+                        className="form-select"
+                        style={{ padding: '3px 8px', fontSize: '0.8rem', width: 'auto' }}
+                      >
+                        <option value="Todo">To Do</option>
+                        <option value="InProgress">In Progress</option>
+                        <option value="Done">Done</option>
+                      </select>
+                    </td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <span className={`priority-badge priority-${t.priority}`}>
+                        {t.priority}
+                      </span>
+                    </td>
+                    <td style={{ padding: '10px 14px' }}>
+                      {t.assigneeName || 'Chưa gán'}
+                    </td>
+                    <td style={{ padding: '10px 14px', color: 'var(--text-muted)' }}>
+                      {t.dueDate ? new Date(t.dueDate).toLocaleDateString('vi-VN') : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: TỔNG QUAN TIẾN ĐỘ & BÁO CÁO */}
+      {activeTab === 'summary' && (
+        <>
+        <div className="sprint-panel-grid"><section className="sprint-panel sprint-panel-progress"><div className="sprint-panel-title"><div><span>SPRINT 4</span><h2>Tiến độ sprint</h2></div><strong>{progressPercent}%</strong></div><div className="sprint-progress-track"><div style={{ width: `${progressPercent}%` }} /></div><div className="sprint-panel-meta"><span>{completedTasks} hoàn thành</span><span>{inProgressCount} đang làm</span><span>{todoCount} chưa bắt đầu</span></div></section><section className="sprint-panel"><div className="sprint-panel-title"><div><span>ƯỚC TÍNH</span><h2>Panel Sprint</h2></div><b className="sprint-label-should">should</b></div><div className="sprint-estimate"><strong>{sprintEstimate}</strong><span>điểm ước tính</span></div><div className="sprint-panel-meta"><span>{sprintCompletedEstimate} đã hoàn thành</span><span>{sprintRemainingEstimate} còn lại</span><b>Priority Low</b></div></section><section className="sprint-panel sprint-panel-people"><div className="sprint-panel-title"><div><span>PHÂN BỔ THEO NGƯỜI</span><h2>Hiệu suất thành viên</h2></div></div><div className="sprint-people-table"><div className="sprint-people-row sprint-people-head"><span>Người thực hiện</span><span>Task</span><span>Tiến độ</span></div>{assigneeSummary.map((member) => <div className="sprint-people-row" key={member.userId}><span className="sprint-person"><span className={`member-avatar-circle ${member.colorClass}`}>{member.initials}</span>{member.name}</span><span>{member.done}/{member.total}</span><span className="sprint-person-progress"><span><i style={{ width: `${member.progress}%` }} /></span>{member.progress}%</span></div>)}</div></section></div>
+        <div style={{ padding: '0 24px 24px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+          <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' }}>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '14px' }}>Tiến độ hoàn thành</h3>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
+              <span style={{ fontSize: '2rem', fontWeight: 700, color: '#0c66e4' }}>{progressPercent}%</span>
+              <span style={{ fontSize: '0.85rem', color: '#6b778c' }}>({completedTasks}/{totalTasks} công việc)</span>
+            </div>
+            <div style={{ width: '100%', height: '8px', background: '#ebecf0', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{ width: `${progressPercent}%`, height: '100%', background: '#36b37e', transition: 'width 0.3s ease' }} />
+            </div>
+          </div>
+
+          <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' }}>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '14px' }}>Phân bổ trạng thái</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>To Do:</span>
+                <span style={{ fontWeight: 600 }}>{todoCount}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>In Progress:</span>
+                <span style={{ fontWeight: 600 }}>{inProgressCount}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Done:</span>
+                <span style={{ fontWeight: 600, color: '#36b37e' }}>{completedTasks}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' }}>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '14px' }}>Thành viên tham gia</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {dynamicMemberList.map((m) => (
+                <div key={m.userId} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f4f5f7', padding: '4px 10px', borderRadius: '14px', fontSize: '0.8rem' }}>
+                  <div className={`member-avatar-circle ${m.colorClass}`} style={{ width: '18px', height: '18px', fontSize: '0.65rem' }}>
+                    {m.initials}
+                  </div>
+                  <span>{m.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        </>
+      )}
+
+      {/* Modals */}
       <CreateTaskModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
@@ -268,6 +690,18 @@ export function ProjectBoardPage() {
         projectId={project.id}
         members={project.members || []}
         myRole={project.myRole}
+      />
+
+      {/* PMS-158: Modal chi tiết & sửa task + mức rủi ro AI */}
+      <TaskDetailModal
+        isOpen={isDetailOpen}
+        task={editingTask}
+        members={project.members || []}
+        isViewer={isViewer}
+        onClose={() => {
+          setIsDetailOpen(false)
+          setEditingTask(null)
+        }}
       />
     </div>
   )

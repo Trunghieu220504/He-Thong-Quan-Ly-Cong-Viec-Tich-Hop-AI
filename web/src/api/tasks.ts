@@ -2,17 +2,54 @@ import { apiClient, IS_MOCK } from './client.ts'
 import { mockService } from './mockData.ts'
 import type { CreateTaskRequest, TaskItem, TaskStatus } from '../types/task.ts'
 
-export async function getTasks(projectId: string, status?: TaskStatus): Promise<TaskItem[]> {
+interface PagedTasksResponse {
+  items: TaskItem[]
+  page: number
+  pageSize: number
+  totalCount: number
+}
+
+/**
+ * PMS-157: [W0] getTasks đọc dạng phân trang, mặc định pageSize=100
+ */
+export async function getTasks(
+  projectId: string,
+  page = 1,
+  pageSize = 100,
+  status?: TaskStatus,
+): Promise<TaskItem[]> {
   if (IS_MOCK) {
-    let list = mockService.getTasks(projectId)
-    if (status) {
-      list = list.filter((t) => t.status === status)
-    }
-    return list
+    return mockService.getTasks(projectId, page, pageSize, status)
   }
 
-  const query = status ? `?status=${status}` : ''
-  return apiClient<TaskItem[]>(`/api/projects/${projectId}/tasks${query}`)
+  const queryParams = new URLSearchParams()
+  queryParams.set('page', String(page))
+  queryParams.set('pageSize', String(pageSize))
+  if (status) {
+    queryParams.set('status', status)
+  }
+
+  const response = await apiClient<PagedTasksResponse | TaskItem[]>(
+    `/api/projects/${projectId}/tasks?${queryParams.toString()}`,
+  )
+
+  // Bóc tách linh hoạt: nếu backend trả PagedResult { items: [...] } thì lấy items, nếu trả mảng thì lấy trực tiếp
+  if (response && 'items' in response && Array.isArray(response.items)) {
+    return response.items
+  }
+  if (Array.isArray(response)) {
+    return response
+  }
+  return []
+}
+
+export async function getTaskById(taskId: string): Promise<TaskItem> {
+  if (IS_MOCK) {
+    const task = mockService.getTasks('').find((t) => t.id === taskId)
+    if (task) return task
+  }
+
+  return apiClient<TaskItem>(`/api/tasks/${taskId}`)
 }
 
 export async function createTask(projectId: string, data: CreateTaskRequest): Promise<TaskItem> {
@@ -48,4 +85,24 @@ export async function updateTaskAssignee(taskId: string, assigneeId?: string): P
     method: 'PATCH',
     body: JSON.stringify({ assigneeId }),
   })
+}
+
+/**
+ * PMS-158: Cập nhật chi tiết task (kết hợp status, assignee và các trường mở rộng)
+ */
+export async function updateTask(taskId: string, data: Partial<TaskItem>): Promise<void> {
+  if (IS_MOCK) {
+    mockService.updateTask(taskId, data)
+    return
+  }
+
+  // Cập nhật status nếu có
+  if (data.status) {
+    await updateTaskStatus(taskId, data.status)
+  }
+
+  // Cập nhật assignee nếu có
+  if (data.assigneeId !== undefined) {
+    await updateTaskAssignee(taskId, data.assigneeId)
+  }
 }

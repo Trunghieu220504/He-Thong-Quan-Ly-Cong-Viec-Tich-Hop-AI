@@ -16,7 +16,7 @@ internal static class TaskDtoMapper
         assigneeName,
         task.DueDate,
         task.CreatedAt,
-        task.UpdatedAt);
+        task.UpdatedAt, task.EstimatedHours, task.ProgressPercent);
 
     public static async Task<string?> GetDisplayNameAsync(
         IIdentityModuleApi identity, Guid? userId, CancellationToken cancellationToken)

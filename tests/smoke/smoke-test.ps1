@@ -50,6 +50,9 @@ try {
     $task = Check 'create task' POST "/api/projects/$id/tasks" $a.token $taskBody 201
     if ([string]$task.assigneeId -ne [string]$b.id) { throw 'Assignee mismatch' }
     if ($Mode -eq 'Week5') {
+        if ($null -eq $task.PSObject.Properties['estimatedHours'] -or $null -eq $task.PSObject.Properties['progressPercent']) {
+            throw 'Week5 blocked: Task v2 fields are missing. Integrate Task v2 before accepting PMS-168; Baseline success is not Week5 acceptance.'
+        }
         if ($task.estimatedHours -ne 8) { throw 'Task v2 estimatedHours was not persisted' }
         $assigned = Wait-Notification $b.token $task.id 'TaskAssigned'
         $count = Check 'unread count' GET '/api/notifications/unread-count' $b.token $null 200
@@ -67,6 +70,8 @@ try {
         $edit = @{ title='Edited smoke task'; description='Updated'; priority='High'; dueDate=$null; estimatedHours=12; progressPercent=50 }
         $updated = Check 'owner edits task' PUT "/api/tasks/$($task.id)" $a.token $edit 200
         if ($updated.estimatedHours -ne 12 -or $updated.progressPercent -ne 50) { throw 'Task edit was not persisted' }
+        $persisted = Check 'read edited task' GET "/api/tasks/$($task.id)" $b.token $null 200
+        if ($persisted.title -ne $edit.title -or $persisted.description -ne $edit.description -or $persisted.priority -ne $edit.priority -or $persisted.estimatedHours -ne 12 -or $persisted.progressPercent -ne 50) { throw 'GET task does not match persisted edit' }
         Check 'viewer PUT denied' PUT "/api/tasks/$($task.id)" $c.token $edit 403 | Out-Null
         Check 'foreign notification denied' PATCH "/api/notifications/$($assigned.id)/read" $a.token $null 404 | Out-Null
         # The actor must not receive its own status notification.
@@ -89,6 +94,11 @@ try {
     if ($burndown.totalTasks -ne 1 -or $burndown.completedTasks -ne 1 -or $burndown.remainingTasks -ne 0) { throw 'Expected burndown 1/1/0' }
     Check 'complete sprint' POST "/api/sprints/$($sprint.id)/complete" $a.token $null 200 | Out-Null
     if ($Mode -eq 'Week5') {
+        Check 'dashboard without JWT' GET "/api/projects/$id/dashboard" $null $null 401 | Out-Null
+        Check 'dashboard outside project' GET "/api/projects/$id/dashboard" $outside.token $null 403 | Out-Null
+        Check 'dashboard unknown project' GET "/api/projects/$([guid]::NewGuid())/dashboard" $a.token $null 404 | Out-Null
+        $viewerDashboard = Check 'viewer dashboard access' GET "/api/projects/$id/dashboard" $c.token $null 200
+        if ($viewerDashboard.projectId -ne $id -or $viewerDashboard.tasks.total -ne 1 -or $viewerDashboard.tasks.done -ne 1) { throw 'Viewer dashboard mismatch' }
         $dashboard = Check 'dashboard' GET "/api/projects/$id/dashboard" $a.token $null 200
         if ($dashboard.tasks.total -ne 1 -or $dashboard.tasks.done -ne 1 -or $dashboard.tasks.todo -ne 0 -or $dashboard.tasks.inProgress -ne 0 -or $dashboard.tasks.overdue -ne 0 -or $dashboard.tasks.completionPercent -ne 100) { throw 'Dashboard totals mismatch' }
         $assignee = @($dashboard.byAssignee | Where-Object { $_.assigneeId -eq $b.id })

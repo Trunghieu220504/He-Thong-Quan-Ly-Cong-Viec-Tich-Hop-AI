@@ -1,3 +1,8 @@
+using System.Net;
+using System.Net.Sockets;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Notifications.Infrastructure.Email;
 using Identity.Contracts;
 using Notifications.Application.Abstractions;
 using Notifications.Application.EventHandlers;
@@ -97,6 +102,78 @@ public sealed class NotificationsModuleTests
         Assert.Single(repo.Items);
         Assert.Equal(creatorId, repo.Items[0].UserId);
         Assert.Equal(NotificationTypes.TaskStatusChanged, repo.Items[0].Type);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TaskAssignedHandler_PreservesNotification_WhenSmtpFailsOrTimesOut(bool stall)
+    {
+        using var server = new TcpListener(IPAddress.Loopback, 0);
+        server.Start();
+        var port = ((IPEndPoint)server.LocalEndpoint).Port;
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Smtp:Host"] = "127.0.0.1",
+            ["Smtp:Port"] = port.ToString(),
+            ["Smtp:TimeoutSeconds"] = "1"
+        }).Build();
+        var repo = new FakeNotificationRepository();
+        var pusher = new FakeRealtimePusher();
+        var identity = new FakeIdentityModuleApi();
+        var logger = new EmailLogger();
+        var sender = new SmtpNotificationEmailSender(config, identity, logger);
+        var handler = new TaskAssignedNotificationHandler(repo, identity, pusher, sender);
+        var ev = new TaskAssignedIntegrationEvent(
+            Guid.NewGuid(), DateTime.UtcNow, Guid.NewGuid(), Guid.NewGuid(),
+            "Task", Guid.NewGuid(), null, Guid.NewGuid());
+
+        var handling = handler.Handle(ev);
+        using var peer = await server.AcceptTcpClientAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        if (!stall)
+            peer.Close(); // The SMTP server disconnects before sending a greeting.
+
+        // A silent server must also finish within the configured email timeout.
+        await handling.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Single(repo.Items);
+        Assert.Single(pusher.Pushed);
+        Assert.NotNull(logger.Error);
+        if (stall)
+            Assert.IsAssignableFrom<OperationCanceledException>(logger.Error);
+
+        // Retry of the event must not create or push a second notification.
+        await handler.Handle(ev);
+        Assert.Single(repo.Items);
+        Assert.Single(pusher.Pushed);
+    }
+
+    [Fact]
+    public async Task TaskStatusChangedHandler_IsIdempotent_AndDeduplicatesRecipients()
+    {
+        var repo = new FakeNotificationRepository();
+        var pusher = new FakeRealtimePusher();
+        var handler = new TaskStatusChangedNotificationHandler(repo, new FakeIdentityModuleApi(), pusher);
+        var recipient = Guid.NewGuid();
+        var ev = new TaskStatusChangedIntegrationEvent(
+            Guid.NewGuid(), DateTime.UtcNow, Guid.NewGuid(), Guid.NewGuid(), "Task",
+            ProjectTaskStatus.Todo, ProjectTaskStatus.Done,
+            AssigneeId: recipient, CreatedBy: recipient, ChangedBy: Guid.NewGuid());
+
+        await handler.Handle(ev);
+        await handler.Handle(ev);
+
+        Assert.Single(repo.Items);
+        Assert.Single(pusher.Pushed);
+        Assert.Equal(recipient, repo.Items[0].UserId);
+    }
+
+    private sealed class EmailLogger : ILogger<SmtpNotificationEmailSender>
+    {
+        public Exception? Error { get; private set; }
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel logLevel) => true;
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state,
+            Exception? exception, Func<TState, Exception?, string> formatter) => Error = exception;
     }
 
     private sealed class FakeNotificationRepository : INotificationRepository

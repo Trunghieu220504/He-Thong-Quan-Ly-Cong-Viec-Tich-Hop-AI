@@ -1,4 +1,6 @@
 using System.Text;
+using Dashboard.Application;
+using Dashboard.Api.Endpoints;
 using System.Text.Json.Serialization;
 using EventBus;
 using Identity.Api.Endpoints;
@@ -35,7 +37,8 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
     typeof(Sprints.Application.DependencyInjection).Assembly,
     typeof(RiskAI.Application.DependencyInjection).Assembly,
     typeof(TaskManagement.Application.DependencyInjection).Assembly,
-    typeof(Notifications.Application.DependencyInjection).Assembly));
+    typeof(Notifications.Application.DependencyInjection).Assembly,
+    typeof(Dashboard.Application.DependencyInjection).Assembly));
 
 builder.Services.AddIdentityApplication();
 builder.Services.AddProjectsApplication();
@@ -44,6 +47,7 @@ builder.Services.AddTaskManagementApplication();
 builder.Services.AddRiskAIApplication();
 builder.Services.AddNotificationsApplication();
 builder.Services.AddNotificationsRealtime();
+builder.Services.AddDashboardApplication();
 
 // ---- Bus sự kiện tích hợp chạy trong tiến trình (handler lỗi chỉ ghi log, không làm hỏng bên phát) ----
 builder.Services.AddInProcessEventBus();
@@ -146,6 +150,7 @@ app.MapSprintsEndpoints();
 app.MapTaskManagementEndpoints();
 app.MapRiskAIEndpoints();
 app.MapNotificationsEndpoints();
+app.MapDashboardEndpoints();
 
 app.Run();
 
