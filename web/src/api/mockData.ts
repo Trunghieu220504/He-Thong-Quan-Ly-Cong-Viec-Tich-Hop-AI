@@ -1,13 +1,15 @@
 import type { AuthTokens, UserSummary } from '../types/auth.ts'
+import type { NotificationItem, NotificationsResponse } from '../types/notification.ts'
 import type { ProjectDetail, ProjectsListResponse } from '../types/project.ts'
 import type { TaskItem, TaskRiskResponse } from '../types/task.ts'
 
-const STORAGE_KEY = 'pmai_mock_db_v1'
+const STORAGE_KEY = 'pmai_mock_db_v4'
 
 interface MockDB {
   projects: ProjectDetail[]
   tasks: TaskItem[]
   risks: Record<string, TaskRiskResponse>
+  notifications: NotificationItem[]
 }
 
 function initMockData(): MockDB {
@@ -23,14 +25,15 @@ function initMockData(): MockDB {
       members: [
         { userId: 'u-user-01', role: 'Owner', joinedAt: new Date().toISOString(), displayName: 'Bảo Anh (Bạn)' },
         { userId: 'u-user-02', role: 'Admin', joinedAt: new Date().toISOString(), displayName: 'Trung Hiếu' },
-        { userId: 'u-user-03', role: 'Member', joinedAt: new Date().toISOString(), displayName: 'Hải Đăng' },
-        { userId: 'u-user-04', role: 'Viewer', joinedAt: new Date().toISOString(), displayName: 'Phương Thảo' },
+        { userId: 'u-user-03', role: 'Member', joinedAt: new Date().toISOString(), displayName: 'Hoàng Xuân' },
+        { userId: 'u-user-04', role: 'Member', joinedAt: new Date().toISOString(), displayName: 'Phạm Đăng' },
+        { userId: 'u-user-05', role: 'Viewer', joinedAt: new Date().toISOString(), displayName: 'Phương Hoa' },
       ],
     },
     {
       id: 'f2d3c4b5-b6f7-4890-9123-4567890bcdef',
-      name: 'Website Thương Mại Điện Tử',
-      description: 'Nghiên cứu giao diện giỏ hàng và thanh toán trực tuyến.',
+      name: 'HealthBook AI',
+      description: 'Hệ thống hồ sơ sức khỏe và gợi ý chẩn đoán y khoa AI.',
       ownerId: 'u-user-02',
       myRole: 'Member',
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
@@ -39,14 +42,74 @@ function initMockData(): MockDB {
         { userId: 'u-user-01', role: 'Member', joinedAt: new Date().toISOString(), displayName: 'Bảo Anh (Bạn)' },
       ],
     },
+    {
+      id: 'a3b4c5d6-e7f8-4901-a234-5678901cdef0',
+      name: 'Hệ thống quản lý mượn trả thiết bị',
+      description: 'Quản lý thiết bị phần cứng, phòng máy và cảm biến IoT.',
+      ownerId: 'u-user-03',
+      myRole: 'Member',
+      createdAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+      members: [
+        { userId: 'u-user-03', role: 'Owner', joinedAt: new Date().toISOString(), displayName: 'Hoàng Xuân' },
+        { userId: 'u-user-01', role: 'Member', joinedAt: new Date().toISOString(), displayName: 'Bảo Anh (Bạn)' },
+      ],
+    },
   ]
 
   const initialTasks: TaskItem[] = [
     {
-      id: 'task-101',
+      id: 'task-157',
       projectId: 'e1d2c3b4-a5f6-4789-8012-3456789abcde',
-      title: 'Thiết kế khung giao diện Kanban 3 cột',
-      description: 'Tích hợp @dnd-kit/core cho các cột Todo, InProgress, Done.',
+      title: '[W0] getTasks đọc dạng phân trang, pageSize=100',
+      description: 'Cập nhật apiClient và getTasks gọi /api/projects/{projectId}/tasks?page=1&pageSize=100, bóc tách cấu trúc PagedResult.',
+      status: 'Todo',
+      priority: 'Medium',
+      assigneeId: 'u-user-01',
+      assigneeName: 'Bảo Anh (Bạn)',
+      dueDate: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'task-158',
+      projectId: 'e1d2c3b4-a5f6-4789-8012-3456789abcde',
+      title: '[W1] Modal chi tiết/sửa task + mức rủi ro',
+      description: 'Modal chi tiết công việc cho phép xem và sửa tiêu đề, mô tả, mức ưu tiên, người phụ trách, trạng thái và hiển thị đánh giá rủi ro AI.',
+      status: 'Todo',
+      priority: 'High',
+      assigneeId: 'u-user-01',
+      assigneeName: 'Bảo Anh (Bạn)',
+      dueDate: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10),
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'task-159',
+      projectId: 'e1d2c3b4-a5f6-4789-8012-3456789abcde',
+      title: '[W2] Chuông thông báo (SignalR + polling 30 giây) + toast',
+      description: 'Ước tính 3. accessTokenFactory lấy token mới mỗi lần nối. Kết nối SignalR hub hoặc fallback polling 30 giây để cập nhật thông báo và hiển thị toast.',
+      status: 'Todo',
+      priority: 'High',
+      assigneeId: 'u-user-01',
+      assigneeName: 'Bảo Anh (Bạn)',
+      dueDate: new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10),
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'task-152',
+      projectId: 'e1d2c3b4-a5f6-4789-8012-3456789abcde',
+      title: 'Dashboard backend + đặc trưng RiskAI',
+      description: 'Xây dựng API thống kê tổng quan và trích xuất vector đặc trưng cho mô hình dự đoán trễ hạn.',
+      status: 'InProgress',
+      priority: 'High',
+      assigneeId: 'u-user-04',
+      assigneeName: 'Phạm Đăng',
+      dueDate: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10),
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'task-156',
+      projectId: 'e1d2c3b4-a5f6-4789-8012-3456789abcde',
+      title: 'Web: thông báo, dashboard, sửa task',
+      description: 'Hoàn thiện giao diện thông báo real-time SignalR và modal cập nhật chi tiết công việc.',
       status: 'InProgress',
       priority: 'High',
       assigneeId: 'u-user-01',
@@ -55,54 +118,114 @@ function initMockData(): MockDB {
       createdAt: new Date().toISOString(),
     },
     {
-      id: 'task-102',
+      id: 'task-163',
       projectId: 'e1d2c3b4-a5f6-4789-8012-3456789abcde',
-      title: 'Xây dựng trang Login và lưu Token JWT',
-      description: 'Bảo vệ các route /projects và tự động chuyển hướng khi 401.',
+      title: 'Docker hóa API + Web',
+      description: 'Viết Dockerfile nhiều tầng (multi-stage build) và docker-compose.yml cho môi trường dev/staging.',
+      status: 'InReview' as TaskItem['status'],
+      priority: 'High',
+      assigneeId: 'u-user-03',
+      assigneeName: 'Hoàng Xuân',
+      dueDate: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'task-149',
+      projectId: 'e1d2c3b4-a5f6-4789-8012-3456789abcde',
+      title: 'ML thật cho ai-service',
+      description: 'Huấn luyện mô hình Random Forest / Logistic Regression dự đoán mức độ trễ của Task.',
       status: 'Done',
       priority: 'High',
-      assigneeId: 'u-user-01',
-      assigneeName: 'Bảo Anh (Bạn)',
+      assigneeId: 'u-user-04',
+      assigneeName: 'Phạm Đăng',
       dueDate: new Date().toISOString().slice(0, 10),
       createdAt: new Date().toISOString(),
     },
     {
-      id: 'task-103',
+      id: 'task-168',
       projectId: 'e1d2c3b4-a5f6-4789-8012-3456789abcde',
-      title: 'Tích hợp dự đoán rủi ro AI cho Task',
-      description: 'Gọi endpoint GET /api/tasks/{id}/risk, xử lý fallback 503 mượt mà.',
-      status: 'Todo',
+      title: 'Tích hợp RabbitMQ EventBus cho Module Notifications',
+      description: 'Lắng nghe sự kiện TaskCreatedEvent và gửi email thông báo cho Assignee.',
+      status: 'InProgress',
       priority: 'Medium',
-      assigneeId: 'u-user-04',
-      assigneeName: 'Phương Thảo',
-      dueDate: new Date(Date.now() + 86400000 * 5).toISOString().slice(0, 10),
+      assigneeId: 'u-user-02',
+      assigneeName: 'Trung Hiếu',
+      dueDate: new Date(Date.now() + 86400000 * 4).toISOString().slice(0, 10),
       createdAt: new Date().toISOString(),
     },
     {
-      id: 'task-104',
+      id: 'task-170',
       projectId: 'e1d2c3b4-a5f6-4789-8012-3456789abcde',
-      title: 'Kiểm tra Responsive trên thiết bị di động',
-      description: 'Đảm bảo thanh Kanban trượt ngang mượt mà trên màn hình nhỏ.',
-      status: 'Todo',
-      priority: 'Low',
-      assigneeId: 'u-user-03',
-      assigneeName: 'Hải Đăng',
-      dueDate: new Date(Date.now() + 86400000 * 7).toISOString().slice(0, 10),
+      title: 'Kiểm thử Smoke E2E cho luồng phân tích rủi ro',
+      description: 'Kiểm tra trạng thái khi AI Service hoạt động và khi AI Service bị ngắt kết nối.',
+      status: 'InProgress',
+      priority: 'Medium',
+      assigneeId: 'u-user-01',
+      assigneeName: 'Bảo Anh (Bạn)',
+      dueDate: new Date(Date.now() + 86400000 * 5).toISOString().slice(0, 10),
       createdAt: new Date().toISOString(),
     },
   ]
 
   const initialRisks: Record<string, TaskRiskResponse> = {
-    'task-101': { taskId: 'task-101', risk: 'medium', source: 'ai-service' },
-    'task-102': { taskId: 'task-102', risk: 'low', source: 'ai-service' },
-    'task-103': { taskId: 'task-103', risk: 'high', source: 'ai-service' },
-    'task-104': { taskId: 'task-104', risk: 'low', source: 'ai-service' },
+    'task-157': { taskId: 'task-157', risk: 'low', source: 'ai-service' },
+    'task-158': { taskId: 'task-158', risk: 'medium', source: 'ai-service' },
+    'task-159': { taskId: 'task-159', risk: 'medium', source: 'ai-service' },
+    'task-152': { taskId: 'task-152', risk: 'low', source: 'ai-service' },
+    'task-156': { taskId: 'task-156', risk: 'medium', source: 'ai-service' },
+    'task-163': { taskId: 'task-163', risk: 'low', source: 'ai-service' },
+    'task-149': { taskId: 'task-149', risk: 'low', source: 'ai-service' },
+    'task-168': { taskId: 'task-168', risk: 'high', source: 'ai-service' },
+    'task-170': { taskId: 'task-170', risk: 'medium', source: 'ai-service' },
   }
+
+  const initialNotifications: NotificationItem[] = [
+    {
+      id: 'notif-1',
+      title: 'Công việc mới được giao',
+      message: 'Bạn được gán vào subtask PMS-159: [W2] Chuông thông báo (SignalR + polling 30 giây) + toast',
+      type: 'task_assigned',
+      isRead: false,
+      createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+      taskId: 'task-159',
+      projectId: 'e1d2c3b4-a5f6-4789-8012-3456789abcde',
+    },
+    {
+      id: 'notif-2',
+      title: 'Cảnh báo rủi ro AI',
+      message: 'Mô hình AI dự đoán rủi ro cao ở task PMS-168: Tích hợp RabbitMQ EventBus',
+      type: 'risk_alert',
+      isRead: false,
+      createdAt: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
+      taskId: 'task-168',
+      projectId: 'e1d2c3b4-a5f6-4789-8012-3456789abcde',
+    },
+    {
+      id: 'notif-3',
+      title: 'Cập nhật trạng thái công việc',
+      message: 'Hoàng Xuân đã chuyển task PMS-163 (Docker hóa API + Web) sang In Review',
+      type: 'status_changed',
+      isRead: false,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+      taskId: 'task-163',
+      projectId: 'e1d2c3b4-a5f6-4789-8012-3456789abcde',
+    },
+    {
+      id: 'notif-4',
+      title: 'Thành viên mới',
+      message: 'Phương Hoa đã tham gia dự án Hệ Thống Quản Lý Công Việc Tích Hợp AI với vai trò Viewer',
+      type: 'system',
+      isRead: true,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+      projectId: 'e1d2c3b4-a5f6-4789-8012-3456789abcde',
+    },
+  ]
 
   return {
     projects: initialProjects,
     tasks: initialTasks,
     risks: initialRisks,
+    notifications: initialNotifications,
   }
 }
 
@@ -188,9 +311,37 @@ export const mockService = {
     return { id: newId }
   },
 
-  getTasks(projectId: string): TaskItem[] {
+  getTasks(projectId: string, page = 1, pageSize = 100, status?: TaskItem['status']): TaskItem[] {
     const db = loadDB()
-    return db.tasks.filter((t) => t.projectId === projectId)
+    let list = db.tasks.filter((t) => t.projectId === projectId)
+    if (status) {
+      list = list.filter((t) => t.status === status)
+    }
+    const start = (page - 1) * pageSize
+    return list.slice(start, start + pageSize)
+  },
+
+  updateTask(taskId: string, data: Partial<TaskItem>): TaskItem {
+    const db = loadDB()
+    const task = db.tasks.find((t) => t.id === taskId)
+    if (!task) throw new Error('Không tìm thấy công việc')
+
+    if (data.title !== undefined) task.title = data.title
+    if (data.description !== undefined) task.description = data.description
+    if (data.priority !== undefined) task.priority = data.priority
+    if (data.status !== undefined) task.status = data.status
+    if (data.dueDate !== undefined) task.dueDate = data.dueDate
+
+    if (data.assigneeId !== undefined) {
+      task.assigneeId = data.assigneeId
+      const project = db.projects.find((p) => p.id === task.projectId)
+      const m = project?.members.find((mem) => mem.userId === data.assigneeId)
+      task.assigneeName = m?.displayName || data.assigneeId
+    }
+
+    task.updatedAt = new Date().toISOString()
+    saveDB(db)
+    return task
   },
 
   createTask(projectId: string, data: { title: string; description?: string; priority: TaskItem['priority']; assigneeId?: string; dueDate?: string }): TaskItem {
@@ -272,5 +423,47 @@ export const mockService = {
   getTaskRisk(taskId: string): TaskRiskResponse | null {
     const db = loadDB()
     return db.risks[taskId] || null
+  },
+
+  getNotifications(): NotificationsResponse {
+    const db = loadDB()
+    const items = db.notifications || []
+    const unreadCount = items.filter((n) => !n.isRead).length
+    return { items, unreadCount }
+  },
+
+  markNotificationAsRead(id: string): void {
+    const db = loadDB()
+    if (db.notifications) {
+      const notif = db.notifications.find((n) => n.id === id)
+      if (notif) {
+        notif.isRead = true
+        saveDB(db)
+      }
+    }
+  },
+
+  markAllNotificationsAsRead(): void {
+    const db = loadDB()
+    if (db.notifications) {
+      db.notifications.forEach((n) => {
+        n.isRead = true
+      })
+      saveDB(db)
+    }
+  },
+
+  addNotification(item: Omit<NotificationItem, 'id' | 'createdAt' | 'isRead'>): NotificationItem {
+    const db = loadDB()
+    if (!db.notifications) db.notifications = []
+    const newNotif: NotificationItem = {
+      ...item,
+      id: 'notif-' + Date.now(),
+      createdAt: new Date().toISOString(),
+      isRead: false,
+    }
+    db.notifications.unshift(newNotif)
+    saveDB(db)
+    return newNotif
   },
 }
