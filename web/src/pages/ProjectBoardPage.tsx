@@ -47,7 +47,7 @@ export function ProjectBoardPage() {
   const queryClient = useQueryClient()
   const { user } = useAuthStore()
 
-  const [activeTab, setActiveTab] = useState<'board' | 'list' | 'summary'>('board')
+  const [activeTab, setActiveTab] = useState<'board' | 'list'>('board')
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isMembersOpen, setIsMembersOpen] = useState(false)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
@@ -155,6 +155,7 @@ export function ProjectBoardPage() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard', projectId] })
     },
   })
 
@@ -324,20 +325,6 @@ export function ProjectBoardPage() {
     )
   }
 
-  const totalTasks = tasks.length
-  const completedTasks = tasks.filter((t) => t.status === 'Done').length
-  const inProgressCount = tasks.filter((t) => t.status === 'InProgress').length
-  const todoCount = tasks.filter((t) => t.status === 'Todo').length
-  const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
-  const sprintEstimate = 3
-  const sprintCompletedEstimate = Math.min(sprintEstimate, completedTasks)
-  const sprintRemainingEstimate = sprintEstimate - sprintCompletedEstimate
-  const assigneeSummary = dynamicMemberList.map((member) => {
-    const memberTasks = tasks.filter((task) => task.assigneeId === member.userId)
-    const done = memberTasks.filter((task) => task.status === 'Done').length
-    return { ...member, total: memberTasks.length, done, progress: memberTasks.length ? Math.round((done / memberTasks.length) * 100) : 0 }
-  })
-
   return (
     <div className="board-page-main-wrapper">
       {/* 1. Header khu vực dự án */}
@@ -392,13 +379,9 @@ export function ProjectBoardPage() {
 
         {/* 2. Dải Tabs chuyển đổi chế độ xem linh hoạt */}
         <div className="view-mode-tabs-bar">
-          <button
-            type="button"
-            onClick={() => setActiveTab('summary')}
-            className={`view-mode-tab-item ${activeTab === 'summary' ? 'active' : ''}`}
-          >
-            Tổng quan (Summary)
-          </button>
+          <Link to={`/projects/${project.id}/dashboard`} className="view-mode-tab-item">
+            Tổng quan
+          </Link>
           <button
             type="button"
             onClick={() => setActiveTab('list')}
@@ -526,7 +509,7 @@ export function ProjectBoardPage() {
 
       {tasks.length >= 100 && (
         <div className="system-notice-alert" role="status">
-          Chỉ tải tối đa 100 công việc đầu tiên. Danh sách, bộ lọc và số liệu tổng hợp có thể chưa bao gồm toàn bộ dự án.
+          Chỉ tải tối đa 100 công việc đầu tiên. Danh sách và bộ lọc có thể chưa bao gồm toàn bộ dự án. Xem Tổng quan để có số liệu đầy đủ.
         </div>
       )}
       {activeTab === 'board' && (
@@ -637,57 +620,6 @@ export function ProjectBoardPage() {
             </table>
           </div>
         </div>
-      )}
-
-      {/* TAB 3: TỔNG QUAN TIẾN ĐỘ & BÁO CÁO */}
-      {activeTab === 'summary' && (
-        <>
-        <div className="sprint-panel-grid"><section className="sprint-panel sprint-panel-progress"><div className="sprint-panel-title"><div><span>CÔNG VIỆC ĐÃ TẢI</span><h2>Tiến độ công việc</h2></div><strong>{progressPercent}%</strong></div><div className="sprint-progress-track"><div style={{ width: `${progressPercent}%` }} /></div><div className="sprint-panel-meta"><span>{completedTasks} hoàn thành</span><span>{inProgressCount} đang làm</span><span>{todoCount} chưa bắt đầu</span></div></section><section className="sprint-panel"><div className="sprint-panel-title"><div><span>ƯỚC TÍNH</span><h2>Panel Sprint (Demo)</h2></div><b className="sprint-label-should">should</b></div><div className="sprint-estimate"><strong>{sprintEstimate}</strong><span>điểm minh họa — không phải ước tính thực tế</span></div><div className="sprint-panel-meta"><span>{sprintCompletedEstimate} đã hoàn thành</span><span>{sprintRemainingEstimate} còn lại</span><b>Priority Low (Demo)</b></div></section><section className="sprint-panel sprint-panel-people"><div className="sprint-panel-title"><div><span>PHÂN BỔ THEO NGƯỜI</span><h2>Hiệu suất thành viên</h2></div></div><div className="sprint-people-table"><div className="sprint-people-row sprint-people-head"><span>Người thực hiện</span><span>Task</span><span>Tiến độ</span></div>{assigneeSummary.map((member) => <div className="sprint-people-row" key={member.userId}><span className="sprint-person"><span className={`member-avatar-circle ${member.colorClass}`}>{member.initials}</span>{member.name}</span><span>{member.done}/{member.total}</span><span className="sprint-person-progress"><span><i style={{ width: `${member.progress}%` }} /></span>{member.progress}%</span></div>)}</div></section></div>
-        <div style={{ padding: '0 24px 24px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-          <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '14px' }}>Tiến độ hoàn thành</h3>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '2rem', fontWeight: 700, color: '#0c66e4' }}>{progressPercent}%</span>
-              <span style={{ fontSize: '0.85rem', color: '#6b778c' }}>({completedTasks}/{totalTasks} công việc)</span>
-            </div>
-            <div style={{ width: '100%', height: '8px', background: '#ebecf0', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ width: `${progressPercent}%`, height: '100%', background: '#36b37e', transition: 'width 0.3s ease' }} />
-            </div>
-          </div>
-
-          <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '14px' }}>Phân bổ trạng thái</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>To Do:</span>
-                <span style={{ fontWeight: 600 }}>{todoCount}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>In Progress:</span>
-                <span style={{ fontWeight: 600 }}>{inProgressCount}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Done:</span>
-                <span style={{ fontWeight: 600, color: '#36b37e' }}>{completedTasks}</span>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '14px' }}>Thành viên tham gia</h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {dynamicMemberList.map((m) => (
-                <div key={m.userId} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f4f5f7', padding: '4px 10px', borderRadius: '14px', fontSize: '0.8rem' }}>
-                  <div className={`member-avatar-circle ${m.colorClass}`} style={{ width: '18px', height: '18px', fontSize: '0.65rem' }}>
-                    {m.initials}
-                  </div>
-                  <span>{m.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        </>
       )}
 
       {/* Modals */}

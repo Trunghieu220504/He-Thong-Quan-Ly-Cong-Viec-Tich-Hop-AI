@@ -59,6 +59,7 @@ body {
   overflow-x: hidden;
 }
 
+
 #root {
   min-height: 100vh;
   display: flex;
@@ -2274,4 +2275,13 @@ body {
 .toast-close-btn:hover {
   background-color: #ebecf0;
   color: #172b4d;
+}
+
+/* Keep the report and shared shell usable on narrow screens. */
+@media (max-width: 768px) {
+  .global-app-header { padding: 0 8px; gap: 8px; }
+  .header-search-section, .header-secondary-action, .brand-subtitle, .status-badge-pill { display: none; }
+  .header-brand-section, .header-actions-section { gap: 8px; }
+  .app-sidebar { position: fixed; top: 56px; bottom: 0; left: 0; z-index: 90; box-shadow: var(--jira-shadow-card-hover); }
+  .sidebar-collapse-edge-btn { opacity: 1; }
 }

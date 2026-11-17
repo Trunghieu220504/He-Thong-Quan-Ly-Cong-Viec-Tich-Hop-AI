@@ -7,6 +7,7 @@ import { ProtectedRoute } from './components/ProtectedRoute.tsx'
 import { ToastContainer } from './components/ToastContainer.tsx'
 import { LoginPage } from './pages/LoginPage.tsx'
 import { ProjectBoardPage } from './pages/ProjectBoardPage.tsx'
+import { ProjectDashboardPage } from './pages/ProjectDashboardPage.tsx'
 import { ProjectsPage } from './pages/ProjectsPage.tsx'
 import './App.css'
 
@@ -39,6 +40,8 @@ export function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<MainLayout />}>
               <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/dashboard" element={<ProjectDashboardPage />} />
+              <Route path="/projects/:projectId/dashboard" element={<ProjectDashboardPage />} />
               <Route path="/projects/:projectId" element={<ProjectBoardPage />} />
             </Route>
           </Route>
