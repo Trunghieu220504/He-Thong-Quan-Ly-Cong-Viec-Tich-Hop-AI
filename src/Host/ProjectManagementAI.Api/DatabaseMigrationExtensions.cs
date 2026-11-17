@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Projects.Infrastructure.Persistence;
 using Sprints.Infrastructure.Persistence;
 using TaskManagement.Infrastructure.Persistence;
-
+using Notifications.Infrastructure.Persistence;
 namespace ProjectManagementAI.Api;
 
 /// <summary>
@@ -21,7 +21,8 @@ public static class DatabaseMigrationExtensions
         typeof(IdentityDbContext),
         typeof(ProjectsDbContext),
         typeof(TaskManagementDbContext),
-        typeof(SprintsDbContext)
+        typeof(SprintsDbContext),
+        typeof(NotificationsDbContext),
     ];
 
     /// <summary>

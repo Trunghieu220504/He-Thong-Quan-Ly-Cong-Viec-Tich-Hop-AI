@@ -24,6 +24,9 @@ using Sprints.Infrastructure;
 using TaskManagement.Api.Endpoints;
 using TaskManagement.Application;
 using TaskManagement.Infrastructure;
+using Notifications.Api;
+using Notifications.Application;
+using Notifications.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +37,7 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
     typeof(Sprints.Application.DependencyInjection).Assembly,
     typeof(RiskAI.Application.DependencyInjection).Assembly,
     typeof(TaskManagement.Application.DependencyInjection).Assembly,
+    typeof(Notifications.Application.DependencyInjection).Assembly,
     typeof(Dashboard.Application.DependencyInjection).Assembly));
 
 builder.Services.AddIdentityApplication();
@@ -41,6 +45,8 @@ builder.Services.AddProjectsApplication();
 builder.Services.AddSprintsApplication();
 builder.Services.AddTaskManagementApplication();
 builder.Services.AddRiskAIApplication();
+builder.Services.AddNotificationsApplication();
+builder.Services.AddNotificationsRealtime();
 builder.Services.AddDashboardApplication();
 
 // ---- Bus sự kiện tích hợp chạy trong tiến trình (handler lỗi chỉ ghi log, không làm hỏng bên phát) ----
@@ -56,6 +62,8 @@ builder.Services.AddSprintsInfrastructure(builder.Configuration);
 
 // ---- RiskAI: HttpClient gọi ai-service (AiService:BaseUrl, mặc định http://localhost:8000) ----
 builder.Services.AddRiskAIInfrastructure(builder.Configuration);
+
+builder.Services.AddNotificationsInfrastructure(builder.Configuration);
 
 // ---- Authentication: JWT Bearer (khớp JwtTokenGenerator) ----
 var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
@@ -80,6 +88,19 @@ builder.Services
             ClockSkew = TimeSpan.FromSeconds(30),
             NameClaimType = "name",
             RoleClaimType = "role"
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 builder.Services.AddAuthorization();
@@ -128,6 +149,7 @@ app.MapProjectsEndpoints();
 app.MapSprintsEndpoints();
 app.MapTaskManagementEndpoints();
 app.MapRiskAIEndpoints();
+app.MapNotificationsEndpoints();
 app.MapDashboardEndpoints();
 
 app.Run();
