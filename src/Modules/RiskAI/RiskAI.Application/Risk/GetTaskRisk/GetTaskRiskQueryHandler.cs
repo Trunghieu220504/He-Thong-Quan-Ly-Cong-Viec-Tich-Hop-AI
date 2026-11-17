@@ -31,9 +31,9 @@ public sealed class GetTaskRiskQueryHandler(
 
         var features = new RiskAiRequest(
             TaskId: task.Id,
-            EstimatedHours: null, // TaskSummary chưa có EstimatedHours; bổ sung khi TaskManagement mở field này
+            EstimatedHours: task.EstimatedHours,
             DaysUntilDue: DaysUntilDue(task.DueDate, clock.GetUtcNow()),
-            ProgressPercent: ProgressFrom(task.Status));
+            ProgressPercent: task.ProgressPercent);
 
         try
         {
@@ -50,7 +50,7 @@ public sealed class GetTaskRiskQueryHandler(
     /// Số ngày trọn vẹn còn lại tới hạn (làm tròn xuống): còn 3,5 ngày → 3; còn vài giờ → 0;
     /// quá hạn 1 giờ → -1. Null nếu task không có hạn.
     /// </summary>
-    private static int? DaysUntilDue(DateTime? dueDate, DateTimeOffset now)
+    internal static int? DaysUntilDue(DateTime? dueDate, DateTimeOffset now)
     {
         if (dueDate is not { } due)
             return null;
@@ -65,12 +65,4 @@ public sealed class GetTaskRiskQueryHandler(
         return (int)Math.Floor((dueUtc - now.UtcDateTime).TotalDays);
     }
 
-    /// <summary>Task chưa có % tiến độ nên suy từ trạng thái Kanban.</summary>
-    private static double? ProgressFrom(ProjectTaskStatus status) => status switch
-    {
-        ProjectTaskStatus.Todo => 0,
-        ProjectTaskStatus.InProgress => 50,
-        ProjectTaskStatus.Done => 100,
-        _ => null
-    };
 }
