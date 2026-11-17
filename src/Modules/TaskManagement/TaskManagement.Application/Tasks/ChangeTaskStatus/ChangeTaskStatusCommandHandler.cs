@@ -1,5 +1,4 @@
 using Application.Abstractions.CQRS;
-using EventBus;
 using FluentValidation;
 using Identity.Contracts;
 using Projects.Contracts;
@@ -17,7 +16,7 @@ public sealed class ChangeTaskStatusCommandHandler(
     IIdentityModuleApi identity,
     ITaskRepository tasks,
     ITaskManagementUnitOfWork unitOfWork,
-    IIntegrationEventBus eventBus)
+    IIntegrationEventOutbox outbox)
     : ICommandHandler<ChangeTaskStatusCommand, Result<TaskDto>>
 {
     public async Task<Result<TaskDto>> Handle(ChangeTaskStatusCommand request, CancellationToken cancellationToken)
@@ -40,15 +39,17 @@ public sealed class ChangeTaskStatusCommandHandler(
         if (changed.IsFailure)
             return Result<TaskDto>.ValidationFailure(changed.Error!);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
+        // Ghi sự kiện vào outbox TRƯỚC khi lưu để nó nằm chung transaction với task; gửi tức thì sau khi lưu xong.
         if (previousStatus != task.Status)
         {
-            await eventBus.PublishAsync(new TaskStatusChangedIntegrationEvent(
+            outbox.Enqueue(new TaskStatusChangedIntegrationEvent(
                 Guid.NewGuid(), DateTime.UtcNow, task.Id, task.ProjectId, task.Title,
                 ToContract(previousStatus), ToContract(task.Status), task.AssigneeId,
-                task.CreatedBy, request.ActorId), cancellationToken);
+                task.CreatedBy, request.ActorId));
         }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await outbox.DispatchAsync(cancellationToken);
 
         var assigneeName = await TaskDtoMapper.GetDisplayNameAsync(identity, task.AssigneeId, cancellationToken);
         return Result<TaskDto>.Success(TaskDtoMapper.ToDto(task, assigneeName));

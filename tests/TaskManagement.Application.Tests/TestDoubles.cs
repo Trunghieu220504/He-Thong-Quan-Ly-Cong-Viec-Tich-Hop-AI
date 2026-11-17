@@ -23,7 +23,7 @@ internal sealed class TaskEventFixture : IDisposable
     public ProjectTask Task { get; }
     public FakeTaskRepository Repository { get; } = new();
     public FakeTaskUnitOfWork UnitOfWork { get; } = new();
-    public RecordingEventBus Bus { get; }
+    public RecordingOutbox Bus { get; }
     public FakeProjectsApi Projects { get; } = new();
     private readonly ServiceProvider _services;
 
@@ -34,14 +34,14 @@ internal sealed class TaskEventFixture : IDisposable
         Repository.Tasks.Add(Task);
         Projects.Roles[(ProjectId, ActorId)] = "Owner";
         Projects.Roles[(ProjectId, MemberId)] = "Member";
-        Bus = new RecordingEventBus(UnitOfWork);
+        Bus = new RecordingOutbox(UnitOfWork);
         var services = new ServiceCollection();
         services.AddTaskManagementApplication();
         services.AddSingleton<ITaskRepository>(Repository);
         services.AddSingleton<ITaskManagementUnitOfWork>(UnitOfWork);
         services.AddSingleton<IProjectsModuleApi>(Projects);
         services.AddSingleton<IIdentityModuleApi, FakeIdentityApi>();
-        services.AddSingleton<IIntegrationEventBus>(Bus);
+        services.AddSingleton<IIntegrationEventOutbox>(Bus);
         _services = services.BuildServiceProvider();
     }
 
@@ -97,19 +97,40 @@ internal sealed class FakeTaskUnitOfWork : ITaskManagementUnitOfWork
     }
 }
 
-internal sealed class RecordingEventBus(FakeTaskUnitOfWork unitOfWork) : IIntegrationEventBus
+/// <summary>
+/// Outbox giả: ghi lại thứ tự enqueue/save/publish. <see cref="Events"/> chỉ chứa sự kiện đã được DispatchAsync
+/// (tức đã qua bước lưu thành công); <see cref="Enqueued"/> chứa mọi sự kiện đã Enqueue (kể cả khi lưu thất bại).
+/// </summary>
+internal sealed class RecordingOutbox(FakeTaskUnitOfWork unitOfWork) : IIntegrationEventOutbox
 {
+    private readonly List<(IIntegrationEvent Event, Func<IIntegrationEventBus, CancellationToken, Task> Forward)> _pending = [];
+    public List<IIntegrationEvent> Enqueued { get; } = [];
     public List<IIntegrationEvent> Events { get; } = [];
     public CancellationToken LastToken { get; private set; }
     public IIntegrationEventBus? ForwardTo { get; set; }
-    public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
-        where TEvent : IIntegrationEvent
+
+    public void Enqueue<TEvent>(TEvent @event) where TEvent : IIntegrationEvent
     {
-        Assert.True(unitOfWork.SuccessfulSaves > 0, "Publishing before successful save is forbidden.");
+        unitOfWork.Operations.Add("enqueue");
+        Enqueued.Add(@event);
+        _pending.Add((@event, (bus, ct) => bus.PublishAsync(@event, ct)));
+    }
+
+    public async Task DispatchAsync(CancellationToken cancellationToken = default)
+    {
+        var ops = unitOfWork.Operations;
+        Assert.True(unitOfWork.SuccessfulSaves > 0, "Dispatching before successful save is forbidden.");
+        Assert.True(ops.LastIndexOf("save") > ops.LastIndexOf("enqueue"),
+            "Events must be enqueued BEFORE the save that persists them (same transaction).");
         LastToken = cancellationToken;
-        unitOfWork.Operations.Add("publish");
-        Events.Add(@event);
-        if (ForwardTo is not null) await ForwardTo.PublishAsync(@event, cancellationToken);
+        var batch = _pending.ToArray();
+        _pending.Clear();
+        foreach (var (e, forward) in batch)
+        {
+            ops.Add("publish");
+            Events.Add(e);
+            if (ForwardTo is not null) await forward(ForwardTo, cancellationToken);
+        }
     }
 }
 

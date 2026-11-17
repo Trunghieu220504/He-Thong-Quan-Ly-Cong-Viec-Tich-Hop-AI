@@ -20,6 +20,8 @@ public static class DependencyInjection
         services.AddScoped<ITaskModuleApi, TaskModuleApi>();
         services.AddScoped<ITaskRepository, TaskRepository>();
         services.AddScoped<ITaskManagementUnitOfWork>(sp => sp.GetRequiredService<TaskManagementDbContext>());
+        // Cần IIntegrationEventBus (AddInProcessEventBus ở Host) để gửi tức thì sau khi lưu.
+        services.AddScoped<IIntegrationEventOutbox, EfIntegrationEventOutbox>();
 
         return services;
     }
