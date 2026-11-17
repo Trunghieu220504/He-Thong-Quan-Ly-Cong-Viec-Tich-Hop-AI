@@ -183,17 +183,8 @@
   }
 }
 
-.sprint-panel-grid { padding: 0 24px 24px; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr); gap: 16px; }
-.sprint-panel { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(9,30,66,.04); }
-.sprint-panel-people { grid-column: 1 / -1; }
-.sprint-panel-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-.sprint-panel-title span { color: #6b778c; font-size: .7rem; font-weight: 700; letter-spacing: .08em; }
-.sprint-panel-title h2 { margin: 5px 0 0; color: #172b4d; font-size: 1.05rem; }
-.sprint-panel-title > strong { color: #0c66e4; font-size: 2rem; }
 .sprint-progress-track { height: 10px; margin: 22px 0 12px; overflow: hidden; border-radius: 99px; background: #ebecf0; }
 .sprint-progress-track > div { height: 100%; border-radius: inherit; background: #36b37e; transition: width .3s ease; }
-.sprint-panel-meta { display: flex; flex-wrap: wrap; gap: 14px; color: #6b778c; font-size: .78rem; }
-.sprint-panel-meta b { color: #172b4d; }
 .sprint-label-should { padding: 4px 8px; border-radius: 5px; color: #006644; background: #e3fcef; font-size: .72rem; }
 .sprint-estimate { display: flex; align-items: baseline; gap: 8px; margin: 24px 0 14px; color: #6b778c; }
 .sprint-estimate strong { color: #172b4d; font-size: 2.4rem; }
@@ -204,4 +195,3 @@
 .sprint-person-progress { display: flex; align-items: center; gap: 8px; }
 .sprint-person-progress > span { flex: 1; height: 6px; overflow: hidden; border-radius: 99px; background: #ebecf0; }
 .sprint-person-progress i { display: block; height: 100%; border-radius: inherit; background: #0c66e4; }
-@media (max-width: 700px) { .sprint-panel-grid { grid-template-columns: 1fr; padding: 0 14px 18px; } .sprint-panel-people { grid-column: auto; } .sprint-people-row { grid-template-columns: minmax(130px, 1fr) 45px minmax(100px, 1fr); gap: 8px; } }

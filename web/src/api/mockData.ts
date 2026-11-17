@@ -1,7 +1,9 @@
+import { ApiError } from './client.ts'
 import type { AuthTokens, UserSummary } from '../types/auth.ts'
 import type { NotificationItem, NotificationsResponse } from '../types/notification.ts'
 import type { ProjectDetail, ProjectsListResponse } from '../types/project.ts'
 import type { TaskItem, TaskRiskResponse } from '../types/task.ts'
+import type { ProjectDashboard } from '../types/dashboard.ts'
 
 const STORAGE_KEY = 'pmai_mock_db_v4'
 
@@ -250,6 +252,45 @@ function saveDB(db: MockDB) {
 }
 
 export const mockService = {
+  getProjectDashboard(projectId: string): ProjectDashboard {
+    const db = loadDB()
+    const project = db.projects.find((p) => p.id === projectId)
+    if (!project) throw new ApiError(404, 'Không tìm thấy dự án')
+    const tasks = db.tasks.filter((task) => task.projectId === projectId)
+    const now = new Date()
+    const done = tasks.filter((task) => task.status === 'Done').length
+    const groups = new Map<string | null, ProjectDashboard['byAssignee'][number]>()
+    for (const task of tasks) {
+      const id = task.assigneeId || null
+      const group = groups.get(id) ?? {
+        assigneeId: id,
+        displayName: id
+          ? project.members.find((member) => member.userId === id)?.displayName || task.assigneeName || id
+          : 'Chưa giao',
+        total: 0,
+        done: 0,
+      }
+      group.total++
+      if (task.status === 'Done') group.done++
+      groups.set(id, group)
+    }
+    return {
+      projectId,
+      generatedAtUtc: now.toISOString(),
+      tasks: {
+        total: tasks.length,
+        todo: tasks.filter((task) => task.status === 'Todo').length,
+        inProgress: tasks.filter((task) => task.status === 'InProgress').length,
+        done,
+        overdue: tasks.filter((task) => task.status !== 'Done' && task.dueDate && new Date(task.dueDate) < now).length,
+        completionPercent: tasks.length ? Math.round(10000 * done / tasks.length) / 100 : 0,
+      },
+      byAssignee: [...groups.values()],
+      // MockDB has no sprint lifecycle; do not invent an active sprint.
+      activeSprint: null,
+    }
+  },
+
   login(email: string): { tokens: AuthTokens; user: UserSummary } {
     return {
       tokens: {
@@ -288,7 +329,7 @@ export const mockService = {
   getProject(id: string): ProjectDetail {
     const db = loadDB()
     const project = db.projects.find((p) => p.id === id)
-    if (!project) throw new Error('Không tìm thấy dự án')
+    if (!project) throw new ApiError(404, 'Không tìm thấy dự án')
     return project
   },
 

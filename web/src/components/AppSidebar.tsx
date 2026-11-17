@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getProjects } from '../api/projects.ts'
@@ -36,6 +36,14 @@ export function AppSidebar({ onOpenCreateProject }: Props) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const location = useLocation()
 
+  useEffect(() => {
+    const compact = window.matchMedia('(max-width: 768px)')
+    const update = () => setIsCollapsed(compact.matches)
+    update()
+    compact.addEventListener('change', update)
+    return () => compact.removeEventListener('change', update)
+  }, [])
+
   // Lấy danh sách dự án thực tế từ API/Store
   const { data: projectsData } = useQuery({
     queryKey: ['projects'],
@@ -67,9 +75,9 @@ export function AppSidebar({ onOpenCreateProject }: Props) {
           <button type="button" className="sidebar-collapsed-item" title="Bộ lọc">
             <FilterIcon />
           </button>
-          <button type="button" className="sidebar-collapsed-item" title="Bảng điều khiển">
+          <Link to={activeProjectId ? `/projects/${activeProjectId}/dashboard` : '/dashboard'} className="sidebar-collapsed-item" title="Báo cáo tiến độ">
             <ChartIcon />
-          </button>
+          </Link>
           <button type="button" className="sidebar-collapsed-item" title="Đội ngũ">
             <UsersGroupIcon />
           </button>
@@ -178,10 +186,10 @@ export function AppSidebar({ onOpenCreateProject }: Props) {
             <FilterIcon className="sidebar-nav-icon" />
             <span className="sidebar-nav-label">Bộ lọc công việc</span>
           </button>
-          <button type="button" className="sidebar-nav-item">
+          <Link to={activeProjectId ? `/projects/${activeProjectId}/dashboard` : '/dashboard'} className={`sidebar-nav-item ${location.pathname.includes('/dashboard') ? 'active' : ''}`}>
             <ChartIcon className="sidebar-nav-icon" />
             <span className="sidebar-nav-label">Bảng báo cáo tiến độ</span>
-          </button>
+          </Link>
           <button type="button" className="sidebar-nav-item">
             <AppsIcon className="sidebar-nav-icon" />
             <span className="sidebar-nav-label">Tài nguyên dự án</span>

@@ -32,6 +32,7 @@ export function CreateTaskModal({ isOpen, onClose, projectId, members }: Props) 
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard', projectId] })
       setTitle('')
       setDescription('')
       setPriority('Medium')
