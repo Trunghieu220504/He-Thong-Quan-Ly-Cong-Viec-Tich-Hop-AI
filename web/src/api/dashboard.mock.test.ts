@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
-vi.mock('./client.ts', () => ({ IS_MOCK: true, apiClient: vi.fn() }))
+vi.mock('./client.ts', async (importOriginal) => ({ ...await importOriginal<typeof import('./client.ts')>(), IS_MOCK: true, apiClient: vi.fn() }))
+import { ApiError } from './client.ts'
 import { getProjectDashboard } from './dashboard.ts'
+import { getProject } from './projects.ts'
 
 const storage = new Map<string, string>()
 beforeEach(() => {
@@ -41,5 +43,7 @@ it('returns empty statistics for an empty project', async () => {
 
 it('rejects a missing project instead of leaking another project report', async () => {
   storage.set('pmai_mock_db_v4', JSON.stringify({ projects: [], tasks: [] }))
-  await expect(getProjectDashboard('missing')).rejects.toThrow('Không tìm thấy dự án')
+  await expect(getProjectDashboard('missing')).rejects.toMatchObject({ status: 404, message: 'Không tìm thấy dự án' })
+  await expect(getProjectDashboard('missing')).rejects.toBeInstanceOf(ApiError)
+  await expect(getProject('missing')).rejects.toMatchObject({ status: 404, message: 'Không tìm thấy dự án' })
 })

@@ -1,3 +1,4 @@
+import { ApiError } from './client.ts'
 import type { AuthTokens, UserSummary } from '../types/auth.ts'
 import type { NotificationItem, NotificationsResponse } from '../types/notification.ts'
 import type { ProjectDetail, ProjectsListResponse } from '../types/project.ts'
@@ -254,7 +255,7 @@ export const mockService = {
   getProjectDashboard(projectId: string): ProjectDashboard {
     const db = loadDB()
     const project = db.projects.find((p) => p.id === projectId)
-    if (!project) throw new Error('Không tìm thấy dự án')
+    if (!project) throw new ApiError(404, 'Không tìm thấy dự án')
     const tasks = db.tasks.filter((task) => task.projectId === projectId)
     const now = new Date()
     const done = tasks.filter((task) => task.status === 'Done').length
@@ -328,7 +329,7 @@ export const mockService = {
   getProject(id: string): ProjectDetail {
     const db = loadDB()
     const project = db.projects.find((p) => p.id === id)
-    if (!project) throw new Error('Không tìm thấy dự án')
+    if (!project) throw new ApiError(404, 'Không tìm thấy dự án')
     return project
   },
 
