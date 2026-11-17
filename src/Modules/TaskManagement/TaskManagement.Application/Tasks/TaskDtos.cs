@@ -11,6 +11,6 @@ public sealed record TaskDto(
     string? AssigneeName,
     DateTime? DueDate,
     DateTime CreatedAt,
-    DateTime? UpdatedAt);
+    DateTime? UpdatedAt, double? EstimatedHours, int ProgressPercent);
 
 public sealed record PagedResult<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount);

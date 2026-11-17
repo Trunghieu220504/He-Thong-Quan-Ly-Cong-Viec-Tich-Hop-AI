@@ -15,6 +15,8 @@ public sealed class ProjectTask : AggregateRoot<Guid>
     public TaskPriority Priority { get; private set; }
     public Guid? AssigneeId { get; private set; }
     public DateTime? DueDate { get; private set; }
+    public double? EstimatedHours { get; private set; }
+    public int ProgressPercent { get; private set; }
     public Guid CreatedBy { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
@@ -28,7 +30,7 @@ public sealed class ProjectTask : AggregateRoot<Guid>
         TaskPriority priority,
         Guid? assigneeId,
         DateTime? dueDate,
-        Guid createdBy)
+        Guid createdBy, double? estimatedHours = null, int progressPercent = 0)
     {
         if (projectId == Guid.Empty)
             return Result<ProjectTask>.Failure("ProjectId không hợp lệ.");
@@ -65,7 +67,31 @@ public sealed class ProjectTask : AggregateRoot<Guid>
             CreatedAt = DateTime.UtcNow
         };
 
+        var updated = task.Update(title, description, priority, dueDate, estimatedHours, progressPercent);
+        if (updated.IsFailure) return Result<ProjectTask>.ValidationFailure(updated.Error!);
+        task.UpdatedAt = null;
         return Result<ProjectTask>.Success(task);
+    }
+
+    public Result Update(string title, string? description, TaskPriority priority, DateTime? dueDate,
+        double? estimatedHours, int progressPercent)
+    {
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > TitleMaxLength)
+            return Result.ValidationFailure("Tiêu đề không hợp lệ.");
+        if (description?.Trim().Length > DescriptionMaxLength || !Enum.IsDefined(priority))
+            return Result.ValidationFailure("Mô tả hoặc mức ưu tiên không hợp lệ.");
+        if (estimatedHours is { } hours && (!double.IsFinite(hours) || hours < 0 || hours > 1000))
+            return Result.ValidationFailure("Giờ ước tính phải từ 0 đến 1000.");
+        if (progressPercent is < 0 or > 100)
+            return Result.ValidationFailure("Tiến độ phải từ 0 đến 100.");
+        Title = title.Trim();
+        Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        Priority = priority;
+        DueDate = NormalizeToUtc(dueDate);
+        EstimatedHours = estimatedHours;
+        ProgressPercent = Status == ProjectTaskStatus.Done ? 100 : progressPercent;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
     }
 
     public Result ChangeStatus(ProjectTaskStatus status)
@@ -77,6 +103,7 @@ public sealed class ProjectTask : AggregateRoot<Guid>
             return Result.Success();
 
         Status = status;
+        if (status == ProjectTaskStatus.Done) ProgressPercent = 100;
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }

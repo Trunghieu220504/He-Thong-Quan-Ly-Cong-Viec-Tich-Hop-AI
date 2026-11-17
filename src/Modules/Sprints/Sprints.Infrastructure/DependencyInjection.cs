@@ -21,7 +21,6 @@ public static class DependencyInjection
         services.AddDbContext<SprintsDbContext>(options => options.UseNpgsql(
             connectionString,
             postgres => postgres.MigrationsHistoryTable("__EFMigrationsHistory", SprintsDbContext.Schema)));
-        services.TryAddScoped<ITaskModuleApi, UnavailableTaskModuleApi>();
         services.AddScoped<ISprintRepository, SprintRepository>();
         services.AddScoped<ISprintsUnitOfWork>(provider => provider.GetRequiredService<SprintsDbContext>());
         services.AddScoped<ISprintsModuleApi, SprintsModuleApi>();

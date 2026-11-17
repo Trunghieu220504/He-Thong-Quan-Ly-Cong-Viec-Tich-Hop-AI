@@ -13,5 +13,5 @@ public interface ISprintsModuleApi
 {
     Task<ActiveSprintOverview?> GetActiveSprintOverviewAsync(
         Guid projectId,
-        CancellationToken ct = default);
+        CancellationToken cancellationToken = default);
 }

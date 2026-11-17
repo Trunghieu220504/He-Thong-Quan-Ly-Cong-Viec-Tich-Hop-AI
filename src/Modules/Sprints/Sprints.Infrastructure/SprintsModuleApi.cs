@@ -12,13 +12,13 @@ public sealed class SprintsModuleApi(
 {
     public async Task<ActiveSprintOverview?> GetActiveSprintOverviewAsync(
         Guid projectId,
-        CancellationToken ct = default)
+        CancellationToken cancellationToken = default)
     {
         var activeSprint = await dbContext.Sprints
             .AsNoTracking()
             .FirstOrDefaultAsync(
                 s => s.ProjectId == projectId && s.Status == SprintStatus.Active,
-                ct);
+                cancellationToken);
 
         if (activeSprint is null)
             return null;
@@ -28,7 +28,7 @@ public sealed class SprintsModuleApi(
             .Where(st => st.SprintId == activeSprint.Id)
             .Select(st => st.TaskId)
             .Distinct()
-            .ToListAsync(ct);
+            .ToListAsync(cancellationToken);
 
         if (taskIds.Count == 0)
         {
@@ -42,9 +42,9 @@ public sealed class SprintsModuleApi(
                 RemainingTasks: 0);
         }
 
-        var statusCounts = await taskModuleApi.CountByStatusAsync(taskIds, ct);
+        var statusCounts = await taskModuleApi.CountByStatusAsync(taskIds, cancellationToken);
 
-        var totalTasks = taskIds.Count;
+        var totalTasks = statusCounts.Total;
         var completedTasks = statusCounts.Done;
         var remainingTasks = totalTasks - completedTasks;
 

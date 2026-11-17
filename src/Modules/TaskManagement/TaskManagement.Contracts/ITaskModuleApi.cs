@@ -12,6 +12,7 @@ public interface ITaskModuleApi
     /// </summary>
     Task<ProjectTaskStats> GetProjectStatsAsync(Guid projectId, DateTime utcNow, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<TaskSummary>> GetProjectTasksAsync(Guid projectId, CancellationToken cancellationToken = default);
     /// <summary>Lấy thông tin tóm tắt của task; null nếu không tồn tại.</summary>
     Task<TaskSummary?> GetTaskAsync(Guid taskId, CancellationToken cancellationToken = default);
 

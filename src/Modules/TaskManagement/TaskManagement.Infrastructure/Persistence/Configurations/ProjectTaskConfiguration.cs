@@ -20,6 +20,8 @@ internal sealed class ProjectTaskConfiguration : IEntityTypeConfiguration<Projec
         builder.Property(t => t.Priority).HasConversion<string>().HasMaxLength(20).IsRequired();
         builder.Property(t => t.AssigneeId);
         builder.Property(t => t.DueDate);
+        builder.Property(t => t.EstimatedHours);
+        builder.Property(t => t.ProgressPercent).HasDefaultValue(0);
         builder.Property(t => t.CreatedBy).IsRequired();
         builder.Property(t => t.CreatedAt).IsRequired();
         builder.Property(t => t.UpdatedAt);

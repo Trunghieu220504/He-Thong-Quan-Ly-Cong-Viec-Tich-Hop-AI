@@ -36,7 +36,7 @@ internal sealed class TaskModuleApi(TaskManagementDbContext db) : ITaskModuleApi
         var task = await db.Tasks.AsNoTracking().FirstOrDefaultAsync(t => t.Id == taskId, cancellationToken);
         return task is null
             ? null
-            : new TaskSummary(task.Id, task.ProjectId, ToContract(task.Status), task.DueDate, task.AssigneeId);
+            : new TaskSummary(task.Id, task.ProjectId, ToContract(task.Status), task.DueDate, task.AssigneeId, task.EstimatedHours, task.ProgressPercent);
     }
 
     public async Task<TaskStatusCounts> CountByStatusAsync(
@@ -57,6 +57,13 @@ internal sealed class TaskModuleApi(TaskManagementDbContext db) : ITaskModuleApi
         var inProgress = Count(DomainStatus.InProgress);
         var done = Count(DomainStatus.Done);
         return new TaskStatusCounts(todo + inProgress + done, todo, inProgress, done);
+    }
+
+    public async Task<IReadOnlyList<TaskSummary>> GetProjectTasksAsync(Guid projectId, CancellationToken cancellationToken = default)
+    {
+        var tasks = await db.Tasks.AsNoTracking().Where(t => t.ProjectId == projectId).OrderBy(t => t.Id).ToListAsync(cancellationToken);
+        return tasks.Select(t => new TaskSummary(t.Id, t.ProjectId, ToContract(t.Status), t.DueDate,
+            t.AssigneeId, t.EstimatedHours, t.ProgressPercent)).ToArray();
     }
 
     private static ProjectTaskStatus ToContract(DomainStatus status) => status switch
