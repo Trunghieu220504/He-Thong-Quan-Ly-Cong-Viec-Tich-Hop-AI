@@ -95,11 +95,11 @@ export function Navbar({ onOpenCreateTask }: Props) {
 
         <NotificationBell />
 
-        <button type="button" className="header-icon-btn" title="Trợ giúp">
+        <button type="button" className="header-icon-btn header-secondary-action" title="Trợ giúp">
           <QuestionIcon />
         </button>
 
-        <button type="button" className="header-icon-btn" title="Cài đặt">
+        <button type="button" className="header-icon-btn header-secondary-action" title="Cài đặt">
           <SettingsIcon />
         </button>
 

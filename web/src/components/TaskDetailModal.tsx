@@ -83,6 +83,10 @@ export function TaskDetailModal({ isOpen, task, members, isViewer = false, onClo
     onError: (err) => {
       setErrorMsg(err instanceof Error ? err.message : 'Không thể lưu công việc')
     },
+    onSettled: () => {
+      // PUT may have saved even when a subsequent status/assignee PATCH failed.
+      queryClient.invalidateQueries({ queryKey: ['dashboard', task?.projectId] })
+    },
   })
 
   if (!isOpen || !task) return null
